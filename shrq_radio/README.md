@@ -10,11 +10,13 @@ SHRQ Radio is a retro-style radio mix generator that combines DJ voiceovers with
 - Outputs a single MP3 mix playable anywhere
 - CLI-based, no inputs required
 
+**NOTE:** SHRQ Radio requires Python 3.12. Newer versions of python are not compatible
+
 ## Setup
 
 1. **Install Python 3.11+**
-2. **Install dependencies:**
-3. Download and install FFmpeg (if not already installed):
+3. **Install dependencies:**
+4. Download and install FFmpeg (if not already installed):
   - Download from: https://www.gyan.dev/ffmpeg/builds/
   - Unzip and place the path to `ffmpeg.exe` and `ffprobe.exe` in `C:/ffmpeg-7.1.1-essentials_build/bin/`
 4. **Ensure you have MP3 music files in:** `shrq_radio/data/music/`
