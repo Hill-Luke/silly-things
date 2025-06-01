@@ -4,8 +4,6 @@
 ### ✅ `requirements.txt`
 
 ```txt
-# Requires Python 3.12
-python_version >= "3.12" ; python_version < "3.13"
 pygame==2.6.1
 pydub==0.25.1
 requests==2.31.0
