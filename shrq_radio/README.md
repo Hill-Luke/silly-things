@@ -46,3 +46,9 @@ If ffmpeg or ffprobe are not found, the script will raise an error.
 
 ## Song Downloader:
 As I listened to my music, I realized that a lot of my music was still from when I was in High School, which was a good and a bad thing. I added a small program that downloads the KUTX Song of the Day from the website and adds it to your music folder. Helps keeps my music library fresh!
+
+### 📦 Requirements
+
+- Python 3.7+
+- `requests`
+- `beautifulsoup4`
