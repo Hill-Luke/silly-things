@@ -43,3 +43,6 @@ It will:
 The DJ audio uses local text-to-speech synthesis. Processing time can take a while depending on the amount of songs you have in the queue and the hardware you're working with. 
 Only .mp3 files are supported for the music playlist.
 If ffmpeg or ffprobe are not found, the script will raise an error.
+
+## Song Downloader:
+As I listened to my music, I realized that a lot of my music was still from when I was in High School, which was a good and a bad thing. I added a small program that downloads the KUTX Song of the Day from the website and adds it to your music folder. Helps keeps my music library fresh!
