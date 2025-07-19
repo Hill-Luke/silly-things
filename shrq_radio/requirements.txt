@@ -6,4 +6,5 @@ edge-tts==6.1.10
 ollama
 mutagen
 bs4
-piper-tts
+piper-tts 
+lxml
