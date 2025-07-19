@@ -6,3 +6,5 @@ edge-tts==6.1.10
 requests
 ollama
 mutagen
+requests
+bs4
