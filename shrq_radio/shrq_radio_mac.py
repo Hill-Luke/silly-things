@@ -33,8 +33,7 @@ os.environ["FFPROBE_BINARY"] = str(ffprobe_path)
 
 if not ffmpeg_path.exists():
     raise FileNotFoundError("ffmpeg not found at expected location.")
-if not ffprobe_path.exists():
-    sys.path.append("/Users/lukeofthehill/piper/src")
+
 
 AudioSegment.converter = str(ffmpeg_path)
 AudioSegment.ffprobe = str(ffprobe_path)
