@@ -15,11 +15,15 @@ SHRQ Radio is a retro-style radio mix generator that combines DJ voiceovers with
 ## Setup
 
 1. **Install Python 3.11+**
-3. **Install dependencies:**
-4. Download and install FFmpeg (if not already installed):
+2. **Install dependencies:**
+```bash
+pip install -r requirements.txt
+```
+3. **FOR WINDOWS USERS** Download and install FFmpeg (if not already installed):
   - Download from: https://www.gyan.dev/ffmpeg/builds/
   - Unzip and place the path to `ffmpeg.exe` and `ffprobe.exe` in `C:/ffmpeg-7.1.1-essentials_build/bin/`
-4. **Ensure you have MP3 music files in:** `shrq_radio/data/music/`
+4. **Install Ollama** Pull `llama3.2:1b` for generating the DJ's script. You can pull whatever model you'd like to use, dependent on your hardware.
+5. **Store your MP3 music files in:** `shrq_radio/data/music/`
 
 ## Run
 ```bash
@@ -36,9 +40,6 @@ It will:
 4. Save the result to shrq_radio/output/final_mix.mp3
 
 ### Notes
-The DJ audio uses local text-to-speech synthesis.
+The DJ audio uses local text-to-speech synthesis. Processing time can take a while depending on the amount of songs you have in the queue and the hardware you're working with. 
 Only .mp3 files are supported for the music playlist.
 If ffmpeg or ffprobe are not found, the script will raise an error.
-
-```bash
-pip install -r requirements.txt
