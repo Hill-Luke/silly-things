@@ -10,5 +10,4 @@ requests
 bs4
 piper-tts 
 wave
-subprocess
 tempfile
