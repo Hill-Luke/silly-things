@@ -18,4 +18,4 @@ shrq_radio/data/dj_responses/
 shrq_radio/data/music
 
 # Ignore system files
-.DS_Store
+.DS_Store*.onnx
