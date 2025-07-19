@@ -13,16 +13,12 @@ import edge_tts
 import pygame
 import nest_asyncio
 import ollama
-from pydub.utils import which
+from pydub import AudioSegment
+from edge_tts.exceptions import NoAudioReceived
 
-
-
-## WINDOWS
-# Force pydub to find ffmpeg/ffprobe by setting environment vars
-# ffmpeg_path = Path("C:/ffmpeg-7.1.1-essentials_build/bin/ffmpeg.exe")
-# ffprobe_path = Path("C:/ffmpeg-7.1.1-essentials_build/bin/ffprobe.exe")
-
-## MAC:
+# ------------------------
+# FFMPEG Setup (Mac)
+# ------------------------
 ffmpeg_path = Path(which("ffmpeg"))
 ffprobe_path = Path(which("ffprobe"))
 
@@ -30,16 +26,13 @@ os.environ["PATH"] = f"{ffmpeg_path.parent};" + os.environ["PATH"]
 os.environ["FFMPEG_BINARY"] = str(ffmpeg_path)
 os.environ["FFPROBE_BINARY"] = str(ffprobe_path)
 
-# ✅ Optional sanity check
 if not ffmpeg_path.exists():
     raise FileNotFoundError("ffmpeg not found at expected location.")
 if not ffprobe_path.exists():
     raise FileNotFoundError("ffprobe not found at expected location.")
-from pydub import AudioSegment
 
 AudioSegment.converter = str(ffmpeg_path)
 AudioSegment.ffprobe = str(ffprobe_path)
-
 
 nest_asyncio.apply()
 pygame.mixer.init()
@@ -86,8 +79,18 @@ def download_mp3(url, save_path):
 # TTS Synthesis
 # ------------------------
 async def synthesize_and_save(text, out_path):
-    communicate = edge_tts.Communicate(text, voice="en-US-AndrewNeural")
-    await communicate.save(str(out_path))
+    if not text.strip():
+        raise ValueError("TTS input text is empty. Cannot synthesize.")
+    
+    print(f"[TTS] Synthesizing:\n{text}")
+    print(f"[TTS] Saving to: {out_path}")
+
+    communicate = edge_tts.Communicate(text, voice="en-US-JennyNeural")
+    try:
+        await communicate.save(str(out_path))
+    except NoAudioReceived:
+        print(f"[TTS ERROR] No audio received from Edge TTS. Text was:\n{text}")
+        raise
 
 # ------------------------
 # Extract MP3 metadata
@@ -127,7 +130,7 @@ async def main():
         print("❌ Not enough songs in the music folder. Please add more.")
         return
 
-    songs = random.sample(music_files, 10)
+    songs = random.sample(music_files, 30)
     news_clip = random.choice([npr_path, tpr_path])
     playlist = songs + [news_clip]
     random.shuffle(playlist)
@@ -178,9 +181,6 @@ async def main():
         json.dump(dj_response_map, f)
 
     # Stitch final mix
-    AudioSegment.converter = which("ffmpeg")
-    AudioSegment.ffprobe = which("ffprobe")
-
     final_mix = AudioSegment.silent(duration=0)
     for i, track in enumerate(playlist):
         if i in response_paths:
@@ -190,7 +190,7 @@ async def main():
     if signoff_path.exists():
         final_mix += AudioSegment.from_file(signoff_path)
 
-    out_path = OUTPUT_DIR / f"shrq_radio_broadcast_{timestamp}.mp3"
+    out_path = OUTPUT_DIR / f"shrq_radio_broadcast.mp3"
     final_mix.export(out_path, format="mp3")
     print(f"\n✅ Broadcast saved to: {out_path}")
 
