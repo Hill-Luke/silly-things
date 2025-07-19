@@ -15,6 +15,12 @@ import nest_asyncio
 import ollama
 from pydub import AudioSegment
 from edge_tts.exceptions import NoAudioReceived
+import wave
+import sys
+from piper import PiperVoice, SynthesisConfig
+import subprocess
+import tempfile
+
 
 # ------------------------
 # FFMPEG Setup (Mac)
@@ -29,7 +35,7 @@ os.environ["FFPROBE_BINARY"] = str(ffprobe_path)
 if not ffmpeg_path.exists():
     raise FileNotFoundError("ffmpeg not found at expected location.")
 if not ffprobe_path.exists():
-    raise FileNotFoundError("ffprobe not found at expected location.")
+    sys.path.append("/Users/lukeofthehill/piper/src")
 
 AudioSegment.converter = str(ffmpeg_path)
 AudioSegment.ffprobe = str(ffprobe_path)
@@ -78,19 +84,47 @@ def download_mp3(url, save_path):
 # ------------------------
 # TTS Synthesis
 # ------------------------
+
+
+# TTS Parameters
+
+syn_config = SynthesisConfig(
+    volume=1,  # half as loud
+    length_scale=1.2,  # twice as slow
+    #noise_scale=1.0,  # more audio variation
+    noise_w_scale=.2,  # more speaking variation
+    #normalize_audio=False, # use raw audio from voice
+)
+
+
+
 async def synthesize_and_save(text, out_path):
     if not text.strip():
         raise ValueError("TTS input text is empty. Cannot synthesize.")
-    
+
     print(f"[TTS] Synthesizing:\n{text}")
     print(f"[TTS] Saving to: {out_path}")
 
-    communicate = edge_tts.Communicate(text, voice="en-US-JennyNeural")
-    try:
-        await communicate.save(str(out_path))
-    except NoAudioReceived:
-        print(f"[TTS ERROR] No audio received from Edge TTS. Text was:\n{text}")
-        raise
+    # Load the voice model once (outside this function if performance becomes an issue)
+    voice = PiperVoice.load("/Users/lukeofthehill/repos/silly-things/shrq_radio/TTS_tests/en_US-ryan-high.onnx")
+
+    # Create a temporary WAV file to write the raw audio
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_wav:
+        wav_path = tmp_wav.name
+        with wave.open(wav_path, "wb") as wav_file:
+            voice.synthesize_wav(text, wav_file, syn_config=syn_config)
+
+    # Convert WAV to MP3 using ffmpeg
+    subprocess.run([
+        "ffmpeg", "-y",
+        "-i", wav_path,
+        "-codec:a", "libmp3lame",
+        "-qscale:a", "2",
+        str(out_path)
+    ], check=True)
+
+    # Clean up temporary WAV file
+    os.remove(wav_path)
 
 # ------------------------
 # Extract MP3 metadata
@@ -130,7 +164,7 @@ async def main():
         print("❌ Not enough songs in the music folder. Please add more.")
         return
 
-    songs = random.sample(music_files, 30)
+    songs = random.sample(music_files, 10)
     news_clip = random.choice([npr_path, tpr_path])
     playlist = songs + [news_clip]
     random.shuffle(playlist)
@@ -165,8 +199,9 @@ async def main():
         response_path = RESPONSES_DIR / f"response_{response_counter}.mp3"
         await synthesize_and_save(clean, response_path)
 
-        dj_response_map[i] = response_counter
-        response_paths[i] = response_path
+        key = track.name
+        dj_response_map[key] = response_counter
+        response_paths[key] = response_path
 
     # Signoff
     signoff_prompt = (
@@ -182,9 +217,10 @@ async def main():
 
     # Stitch final mix
     final_mix = AudioSegment.silent(duration=0)
-    for i, track in enumerate(playlist):
-        if i in response_paths:
-            final_mix += AudioSegment.from_file(response_paths[i]) + AudioSegment.silent(duration=500)
+    for track in playlist:
+        key = track.name
+        if key in response_paths and response_paths[key].exists():
+            final_mix += AudioSegment.from_file(response_paths[key]) + AudioSegment.silent(duration=500)
         final_mix += AudioSegment.from_file(track) + AudioSegment.silent(duration=1000)
 
     if signoff_path.exists():
