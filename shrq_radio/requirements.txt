@@ -5,6 +5,6 @@ nest_asyncio==1.6.0
 edge-tts==6.1.10
 ollama
 mutagen
-beautifulsoup4
+bs4
 piper-tts 
 wave
