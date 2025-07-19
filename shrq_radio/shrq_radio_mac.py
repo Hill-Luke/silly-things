@@ -20,8 +20,7 @@ import sys
 from piper import PiperVoice, SynthesisConfig
 import subprocess
 import tempfile
-
-
+import xml.etree.ElementTree as ET
 # ------------------------
 # FFMPEG Setup (Mac)
 # ------------------------
@@ -54,7 +53,7 @@ RESPONSES_DIR = BASE_DIR / "data/dj_responses"
 OUTPUT_DIR = BASE_DIR / "output"
 
 NPR_URL = "http://public.npr.org/anon.npr-mp3/npr/news/newscast.mp3?_kip_ipx=1006340484-1748098441"
-TPR_URL = "https://cpa.ds.npr.org/s188/audio/2025/05/tpr-news-now-0516.mp3"
+#TPR_URL = "https://cpa.ds.npr.org/s188/audio/2025/05/tpr-news-now-0516.mp3"
 
 # ------------------------
 # Ensure folder structure
@@ -62,6 +61,28 @@ TPR_URL = "https://cpa.ds.npr.org/s188/audio/2025/05/tpr-news-now-0516.mp3"
 def ensure_folder_structure(base):
     for folder in [MUSIC_DIR, NPR_DIR, TPR_DIR, RESPONSES_DIR, OUTPUT_DIR]:
         folder.mkdir(parents=True, exist_ok=True)
+
+
+# ------------------------
+# Getting latest TPR
+# ------------------------
+
+
+def get_latest_tpr_url():
+    rss_feed = "https://www.tpr.org/podcast/tpr-news-now/rss.xml"
+    response = requests.get(rss_feed)
+    if response.status_code != 200:
+        raise Exception(f"Failed to fetch TPR RSS feed (status code {response.status_code})")
+
+    root = ET.fromstring(response.content)
+    for item in root.findall(".//item"):
+        enclosure = item.find("enclosure")
+        if enclosure is not None:
+            url = enclosure.attrib.get("url")
+            if url and url.endswith(".mp3"):
+                return url
+
+    raise Exception("No valid TPR MP3 link found in the RSS feed.")
 
 # ------------------------
 # Download helper
@@ -156,7 +177,8 @@ async def main():
     print("Downloading NPR audio...")
     download_mp3(NPR_URL, npr_path)
     print("Downloading TPR audio...")
-    download_mp3(TPR_URL, tpr_path)
+    tpr_url = get_latest_tpr_url()
+    download_mp3(tpr_url, tpr_path)
 
     # Random playlist
     music_files = list(MUSIC_DIR.glob("*.mp3"))
