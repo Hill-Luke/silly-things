@@ -67,7 +67,6 @@ def ensure_folder_structure(base):
 # Getting latest TPR
 # ------------------------
 
-
 def get_latest_tpr_url():
     rss_feed = "https://www.tpr.org/podcast/tpr-news-now/rss.xml"
     response = requests.get(rss_feed)
