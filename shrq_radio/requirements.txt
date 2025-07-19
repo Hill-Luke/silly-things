@@ -3,10 +3,8 @@ pydub==0.25.1
 requests==2.31.0
 nest_asyncio==1.6.0
 edge-tts==6.1.10
-requests
 ollama
 mutagen
-requests
-bs4
+beautifulsoup4
 piper-tts 
 wave
