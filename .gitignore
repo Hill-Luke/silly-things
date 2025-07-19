@@ -11,6 +11,7 @@ venv/
 *.wav
 *.mp3
 *.log
+*.onnx
 timestamp.log
 shrq_radio/output/
 shrq_radio/data/dj_responses/
