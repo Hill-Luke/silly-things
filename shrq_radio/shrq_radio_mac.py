@@ -46,6 +46,7 @@ pygame.mixer.init()
 # Paths and Config
 # ------------------------
 BASE_DIR = Path(__file__).resolve().parent / "shrq_radio"
+TTS_DIR = Path(__file__).resolve().parent / "TTS_tests"
 MUSIC_DIR = BASE_DIR / "data/music"
 NPR_DIR = BASE_DIR / "data/npr_ntnl"
 TPR_DIR = BASE_DIR / "data/tpr_local"
@@ -126,7 +127,7 @@ async def synthesize_and_save(text, out_path):
     print(f"[TTS] Saving to: {out_path}")
 
     # Load the voice model once (outside this function if performance becomes an issue)
-    voice = PiperVoice.load("/Users/lukeofthehill/repos/silly-things/shrq_radio/TTS_tests/en_US-ryan-high.onnx")
+    voice = PiperVoice.load(f"{TTS_DIR}/en_US-ryan-high.onnx")
 
     # Create a temporary WAV file to write the raw audio
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_wav:
