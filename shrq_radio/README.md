@@ -1,12 +1,3 @@
-  _____   _    _   _____    ____   \n
- / ____| | |  | | |  __ \  / __ \  \n
-| (___   | |__| | | |__) || |  | | \n
- \___ \  |  __  | |  _  / | |  | | \n
- ____) | | |  | | | | \ \ | |__| | \n
-|_____/  |_|  |_| |_|  \_\ \___\_\ \n
-                                \_\ \n
-
-
 # SHRQ Radio
 
 SHRQ Radio is a retro-style radio mix generator that combines DJ voiceovers with randomized music tracks, along with NPR and TPR news clips. It's designed for local use and outputs a single mixed MP3 file you can play as your own radio station.
