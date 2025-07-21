@@ -112,7 +112,7 @@ syn_config = SynthesisConfig(
     volume=1,  # half as loud
     length_scale=1.2,  # twice as slow
     #noise_scale=1.0,  # more audio variation
-    noise_w_scale=.2,  # more speaking variation
+    #noise_w_scale=.02,  # more speaking variation
     #normalize_audio=False, # use raw audio from voice
 )
 
