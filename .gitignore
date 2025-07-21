@@ -16,6 +16,7 @@ timestamp.log
 shrq_radio/output/
 shrq_radio/data/dj_responses/
 shrq_radio/data/music
+dj_response_map.json
 
 # Ignore system files
 .DS_Store*.onnx
