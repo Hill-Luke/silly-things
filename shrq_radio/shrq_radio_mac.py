@@ -108,12 +108,12 @@ def download_mp3(url, save_path):
 
 # TTS Parameters
 
-syn_config = SynthesisConfig(
-    volume=1,  # half as loud
-    length_scale=1.2,  # twice as slow
-    #noise_scale=1.0,  # more audio variation
-    #noise_w_scale=.02,  # more speaking variation
-    #normalize_audio=False, # use raw audio from voice
+syn_config=SynthesisConfig(
+    volume=1.2,             # Slight boost for presence in radio context
+    length_scale=1.05,      # Closer to natural speed, less robotic
+    noise_scale=0.667,      # Introduces some tonal variation (intonation)
+    noise_w_scale=0.8,      # Adds variation in pronunciation and rhythm
+    normalize_audio=True,   # Ensures consistent output loudness
 )
 
 
