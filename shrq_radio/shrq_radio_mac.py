@@ -64,8 +64,9 @@ WARNING = JINGLE_DIR / "shrq_warning.mp3"
 HARD_DRIVE = JINGLE_DIR / "shrq_hard_drive.mp3"
 ITS_RANDOM = JINGLE_DIR / "shrq_its_random.mp3"
 
-jingles=[SHRQ_THEME,STRANGE_TASTE,DONT_COMPLAIN,CANT_DEFUND,WARNING,HARD_DRIVE,ITS_RANDOM,]
+# jingles=[STRANGE_TASTE,DONT_COMPLAIN,CANT_DEFUND,WARNING,HARD_DRIVE,ITS_RANDOM,]
 
+jingles=random.sample([STRANGE_TASTE,DONT_COMPLAIN,CANT_DEFUND,WARNING,HARD_DRIVE,ITS_RANDOM],3)
 
 #TPR_URL = "https://cpa.ds.npr.org/s188/audio/2025/05/tpr-news-now-0516.mp3"
 
@@ -200,11 +201,13 @@ async def main():
         return
 
 
-    songs = random.sample(music_files, 30)
+    songs = random.sample(music_files, 10)
     news_clip = random.choice([npr_path, tpr_path])
+    
     playlist = songs + [news_clip] + jingles
     random.shuffle(playlist)
 
+    # Always start with the SHRQ theme. 
     playlist=[SHRQ_THEME]+playlist
 
     print("\nFinal Playlist:")
