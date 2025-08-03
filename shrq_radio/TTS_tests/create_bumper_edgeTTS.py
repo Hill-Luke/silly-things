@@ -1,7 +1,7 @@
 import asyncio
 import edge_tts
 
-TEXT = "You're listening to S-H-R-Q Radio! Don't complain, because it's all your music!"
+TEXT = "Warning! This set may contain tracks from when you were in High School! You're tuned in to S-H-R-Q."
 
 voices = [
     'en-US-MichelleNeural', 'en-US-AriaNeural', 'en-US-AnaNeural',

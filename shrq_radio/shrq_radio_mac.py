@@ -60,8 +60,11 @@ SHRQ_THEME = JINGLE_DIR / "shrq_tagline.mp3"
 STRANGE_TASTE = JINGLE_DIR / "shrq_strange_taste.mp3"
 DONT_COMPLAIN = JINGLE_DIR / "shrq_dont_complain.mp3"
 CANT_DEFUND = JINGLE_DIR / "shrq_cant_defund.mp3"
+WARNING = JINGLE_DIR / "shrq_warning.mp3"
+HARD_DRIVE = JINGLE_DIR / "shrq_hard_drive.mp3"
+ITS_RANDOM = JINGLE_DIR / "shrq_its_random.mp3"
 
-jingles=[SHRQ_THEME,STRANGE_TASTE,DONT_COMPLAIN,CANT_DEFUND]
+jingles=[SHRQ_THEME,STRANGE_TASTE,DONT_COMPLAIN,CANT_DEFUND,WARNING,HARD_DRIVE,ITS_RANDOM,]
 
 
 #TPR_URL = "https://cpa.ds.npr.org/s188/audio/2025/05/tpr-news-now-0516.mp3"
