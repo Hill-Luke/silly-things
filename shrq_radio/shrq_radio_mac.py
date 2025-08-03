@@ -201,7 +201,7 @@ async def main():
         return
 
 
-    songs = random.sample(music_files, 10)
+    songs = random.sample(music_files, 30)
     news_clip = random.choice([npr_path, tpr_path])
     
     playlist = songs + [news_clip] + jingles
