@@ -25,8 +25,10 @@ pip install -r requirements.txt
 3. **FOR WINDOWS USERS** Download and install FFmpeg (if not already installed):
   - Download from: https://www.gyan.dev/ffmpeg/builds/
   - Unzip and place the path to `ffmpeg.exe` and `ffprobe.exe` in `C:/ffmpeg-7.1.1-essentials_build/bin/`
-4. **Install Ollama** Pull `llama3.2:1b` for generating the DJ's script. You can pull whatever model you'd like to use, dependent on your hardware.
-5. **FOR MAC USERS: Download the Piper TTS voice** Save it to the `TTS_tests` folder using `python3 -m piper.download_voices en_US-hfc_female-medium`
+4. **Install Ollama**
+    - Download and install `ollama` from the [website](https://ollama.com/)
+    - Once installed, pull `llama3.2:1b` for generating the DJ's script. You can pull whatever model you'd like to use, dependent on your hardware. I run this on a raspberry pi, so this smaller model works well and doesn't fry my cpu!
+5. **FOR MAC/LINUX USERS: Download the Piper TTS voice** Save it to the `TTS_tests` folder using `python3 -m piper.download_voices en_US-hfc_female-medium`
 5. **Store your MP3 music files in:** `shrq_radio/data/music/`
 
 ## Run
@@ -35,13 +37,15 @@ python shrq_radio.py
 ```
 
 It will:
-1. Download news clips from NPR or TPR (I live in Texas :) )
+1. Create a folder structure for you. You might need to run the program once to create the appropriate folder structure before loading in your `.mp3` files
 
-2. Generate DJ audio
+2. Download news clips from NPR or TPR (I live in Texas :) )
 
-3. Combine everything into a final mix
+3. Generate DJ audio
 
-4. Save the result to `shrq_radio/output/final_mix.mp3`
+4. Combine everything into a final mix
+
+5. Save the result to `shrq_radio/output/final_mix.mp3`
 
 ### Notes
 The DJ audio uses local text-to-speech synthesis. Processing time can take a while depending on the amount of songs you have in the queue and the hardware you're working with. For best performance, I've capped the playlist at 30 songs--but you can adjust it to your liking.
