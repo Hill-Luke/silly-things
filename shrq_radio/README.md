@@ -11,7 +11,9 @@ SHRQ Radio is a retro-style radio mix generator that combines DJ voiceovers with
 - Plays silly, radio-themed jingles as interludes
 - CLI-based, no inputs required
 
-**NOTE:** SHRQ Radio requires Python 3.12. Newer versions of python are not compatible
+**NOTE:** SHRQ Radio requires Python 3.12. Newer versions of python are not compatible.
+
+SHRQ also reads from the encoding on your mp3 files to get the `song name`, `artist`, and `album` for the host's commentary. It's worthwhile to use a program like [Picard](https://picard.musicbrainz.org/) to clean up your library prior to running SHRQ.
 
 ## Setup
 
