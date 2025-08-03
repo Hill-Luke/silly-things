@@ -24,7 +24,7 @@ pip install -r requirements.txt
   - Download from: https://www.gyan.dev/ffmpeg/builds/
   - Unzip and place the path to `ffmpeg.exe` and `ffprobe.exe` in `C:/ffmpeg-7.1.1-essentials_build/bin/`
 4. **Install Ollama** Pull `llama3.2:1b` for generating the DJ's script. You can pull whatever model you'd like to use, dependent on your hardware.
-5. **FOR MAC USERS: Download the Piper TTS voice** Save it to the `TTS_tests` folder using `python3 -m piper.download_voices en_US-ryan-high`
+5. **FOR MAC USERS: Download the Piper TTS voice** Save it to the `TTS_tests` folder using `python3 -m piper.download_voices en_US-hfc_female-medium`
 5. **Store your MP3 music files in:** `shrq_radio/data/music/`
 
 ## Run
