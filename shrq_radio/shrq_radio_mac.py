@@ -141,7 +141,7 @@ async def synthesize_and_save(text, out_path):
     print(f"[TTS] Saving to: {out_path}")
 
     # Load the voice model once (outside this function if performance becomes an issue)
-    voice = PiperVoice.load(f"{TTS_DIR}/en_US-ryan-high.onnx")
+    voice = PiperVoice.load(f"{TTS_DIR}/en_US-hfc_female-medium.onnx")
 
     # Create a temporary WAV file to write the raw audio
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_wav:
@@ -231,7 +231,7 @@ async def main():
         else:
             md = extract_metadata(track)
             prompt = (
-                f"You will act as a radio DJ for S-H-R-Q with a fun and upbeat tone. Do not simulate sound effects or music. "
+                f"You are a radio DJ named Jessica for a station called S-H-R-Q. You have a playful and upbeat tone. Do not simulate sound effects or music. "
                 f"Say: 'Up next: here is {md['title']} by {md['artist']} from the album {md['album']}. You're listening to S-H-R-Q Radio!'"
             )
 
@@ -248,7 +248,7 @@ async def main():
 
     # Signoff
     signoff_prompt = (
-        "You are signing off for the day as a DJ on S-H-R-Q. Give a fun, friendly farewell, no sound effects."
+        "You are signing off for the day as Jessica, a radio DJ on S-H-R-Q. Give a fun, friendly farewell, no sound effects."
     )
     signoff_result = client.chat(model='llama3.2:1b', messages=[{"role": "user", "content": signoff_prompt}])
     signoff_text = re.sub(r"<think>.*?</think>", "", signoff_result['message']['content'], flags=re.DOTALL).strip()

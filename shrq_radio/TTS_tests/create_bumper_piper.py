@@ -4,7 +4,7 @@ import asyncio
 
 
 
-voice = PiperVoice.load("/Users/lukeofthehill/repos/silly-things/shrq_radio/TTS_tests/en_US-hfc_male-medium.onnx")
+voice = PiperVoice.load("/Users/lukeofthehill/repos/silly-things/shrq_radio/TTS_tests/en_US-hfc_female-medium.onnx")
 syn_config=SynthesisConfig(
     volume=1.2,             # Slight boost for presence in radio context
     length_scale=1.1,      # Closer to natural speed, less robotic
@@ -23,7 +23,7 @@ syn_config=SynthesisConfig(
 
 with wave.open("test.wav", "wb") as wav_file:
     voice.synthesize_wav(
-                          "S-H-R-Q. If you're listening to us, you've got strange taste."
+                          "You're listening to S-H-R-Q. I'm your host, DJ Jessica."
                          , wav_file
                          , syn_config=syn_config
                          )
@@ -37,7 +37,7 @@ subprocess.run([
     "-i", "test.wav",
     "-codec:a", "libmp3lame",
     "-qscale:a", "2",
-    "/Users/lukeofthehill/repos/silly-things/shrq_radio/TTS_tests/shrq_strange_taste.mp3"
+    "/Users/lukeofthehill/repos/silly-things/shrq_radio/TTS_tests/dj_jessica.mp3"
 ])
 
 
