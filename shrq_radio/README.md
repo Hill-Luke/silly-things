@@ -1,6 +1,6 @@
 # SHRQ Radio
 
-SHRQ Radio is a retro-style radio mix generator that combines DJ voiceovers with randomized music tracks, along with NPR and TPR news clips. It's designed for local use and outputs a single mixed MP3 file you can play as your own radio station.
+SHRQ Radio is a retro-style radio mix generator that combines DJ voiceovers with randomized music tracks, along with NPR and TPR news clips. It's designed for local use and outputs a single mixed MP3 file you can play as your own radio station. SHRQ is compatible with Mac, Linux, and Windows. However, most of the development has been on the Mac/Linux side so Windows is missing some features.
 
 ## Features
 
@@ -8,6 +8,7 @@ SHRQ Radio is a retro-style radio mix generator that combines DJ voiceovers with
 - Randomly generates a playlist from local MP3s
 - Injects AI-generated DJ commentary between tracks
 - Outputs a single MP3 mix playable anywhere
+- Plays silly, radio-themed jingles as interludes
 - CLI-based, no inputs required
 
 **NOTE:** SHRQ Radio requires Python 3.12. Newer versions of python are not compatible
@@ -41,7 +42,8 @@ It will:
 4. Save the result to `shrq_radio/output/final_mix.mp3`
 
 ### Notes
-The DJ audio uses local text-to-speech synthesis. Processing time can take a while depending on the amount of songs you have in the queue and the hardware you're working with. 
+The DJ audio uses local text-to-speech synthesis. Processing time can take a while depending on the amount of songs you have in the queue and the hardware you're working with. For best performance, I've capped the playlist at 30 songs--but you can adjust it to your liking.
+There are several SHRQ-Jingles included in the download. I've capped the number of Jingles to three in a playlist, otherwise the likelihood of playing more than one jingle consecutively on a playlist was too high.
 Only .mp3 files are supported for the music playlist.
 If ffmpeg or ffprobe are not found, the script will raise an error.
 
