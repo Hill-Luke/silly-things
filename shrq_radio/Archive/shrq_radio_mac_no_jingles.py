@@ -53,14 +53,6 @@ RESPONSES_DIR = BASE_DIR / "data/dj_responses"
 OUTPUT_DIR = BASE_DIR / "output"
 
 NPR_URL = "http://public.npr.org/anon.npr-mp3/npr/news/newscast.mp3?_kip_ipx=1006340484-1748098441"
-
-SHRQ_THEME = TTS_DIR / "shrq_tagline.mp3"
-STRANGE_TASTE = TTS_DIR / "shrq_strange_taste.mp3"
-DONT_COMPLAIN = TTS_DIR / "shrq_dont_complain.mp3"
-CANT_DEFUND = TTS_DIR / "shrq_cant_defund.mp3"
-
-
-
 #TPR_URL = "https://cpa.ds.npr.org/s188/audio/2025/05/tpr-news-now-0516.mp3"
 
 # ------------------------
@@ -193,17 +185,14 @@ async def main():
         print("❌ Not enough songs in the music folder. Please add more.")
         return
 
-
-    songs = random.sample(music_files, 3)
+    songs = random.sample(music_files, 30)
     news_clip = random.choice([npr_path, tpr_path])
-    playlist = songs + [news_clip] + [SHRQ_THEME]
+    playlist = songs + [news_clip]
     random.shuffle(playlist)
-
-    playlist=[SHRQ_THEME]+playlist
 
     print("\nFinal Playlist:")
     for i, track in enumerate(playlist):
-        print(f"{i+1}. {Path(track).name}")
+        print(f"{i+1}. {track.name}")
 
     client = ollama.Client(host='http://127.0.0.1:11434')
     dj_response_map = {}

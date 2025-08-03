@@ -7,9 +7,9 @@ import asyncio
 voice = PiperVoice.load("/Users/lukeofthehill/repos/silly-things/shrq_radio/TTS_tests/en_US-hfc_male-medium.onnx")
 syn_config=SynthesisConfig(
     volume=1.2,             # Slight boost for presence in radio context
-    length_scale=1.02,      # Closer to natural speed, less robotic
+    length_scale=1.1,      # Closer to natural speed, less robotic
     # noise_scale=0.02,      # Introduces some tonal variation (intonation)
-     noise_w_scale=0.5,      # Adds variation in pronunciation and rhythm
+     noise_w_scale=0.0,      # Adds variation in pronunciation and rhythm
     # normalize_audio=True,   # Ensures consistent output loudness
 )
 
@@ -17,7 +17,7 @@ syn_config=SynthesisConfig(
 # Voices and Messages
 
 # | Voice    | Message
-# | Norman   | "S-H-R-Q. The only radio station that CANNOT be defunded!"
+# | Norman   | "S-H-R-Q. The only radio station that CANNOT be defunded."
 # | hfc_male | "S-H-R-Q. If you're listening to us, you've got strange taste."
 
 

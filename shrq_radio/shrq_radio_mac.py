@@ -51,8 +51,19 @@ NPR_DIR = BASE_DIR / "data/npr_ntnl"
 TPR_DIR = BASE_DIR / "data/tpr_local"
 RESPONSES_DIR = BASE_DIR / "data/dj_responses"
 OUTPUT_DIR = BASE_DIR / "output"
+JINGLE_DIR = BASE_DIR / "data/jingles"
+
 
 NPR_URL = "http://public.npr.org/anon.npr-mp3/npr/news/newscast.mp3?_kip_ipx=1006340484-1748098441"
+
+SHRQ_THEME = JINGLE_DIR / "shrq_tagline.mp3"
+STRANGE_TASTE = JINGLE_DIR / "shrq_strange_taste.mp3"
+DONT_COMPLAIN = JINGLE_DIR / "shrq_dont_complain.mp3"
+CANT_DEFUND = JINGLE_DIR / "shrq_cant_defund.mp3"
+
+jingles=[SHRQ_THEME,STRANGE_TASTE,DONT_COMPLAIN,CANT_DEFUND]
+
+
 #TPR_URL = "https://cpa.ds.npr.org/s188/audio/2025/05/tpr-news-now-0516.mp3"
 
 # ------------------------
@@ -185,14 +196,17 @@ async def main():
         print("❌ Not enough songs in the music folder. Please add more.")
         return
 
+
     songs = random.sample(music_files, 30)
     news_clip = random.choice([npr_path, tpr_path])
-    playlist = songs + [news_clip]
+    playlist = songs + [news_clip] + jingles
     random.shuffle(playlist)
+
+    playlist=[SHRQ_THEME]+playlist
 
     print("\nFinal Playlist:")
     for i, track in enumerate(playlist):
-        print(f"{i+1}. {track.name}")
+        print(f"{i+1}. {Path(track).name}")
 
     client = ollama.Client(host='http://127.0.0.1:11434')
     dj_response_map = {}
@@ -204,6 +218,8 @@ async def main():
             prompt = "Say: 'Up next, some national news from NPR'"
         elif track == tpr_path:
             prompt = "Say: 'Up next, some local news from Texas Public Radio'"
+        elif track in jingles:
+            continue
         elif random.random() < 0.5:
             continue
         else:
