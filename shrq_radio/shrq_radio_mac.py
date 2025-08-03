@@ -51,7 +51,7 @@ NPR_DIR = BASE_DIR / "data/npr_ntnl"
 TPR_DIR = BASE_DIR / "data/tpr_local"
 RESPONSES_DIR = BASE_DIR / "data/dj_responses"
 OUTPUT_DIR = BASE_DIR / "output"
-JINGLE_DIR = BASE_DIR / "data/jingles"
+JINGLE_DIR = BASE_DIR / "jingles"
 
 
 NPR_URL = "http://public.npr.org/anon.npr-mp3/npr/news/newscast.mp3?_kip_ipx=1006340484-1748098441"
