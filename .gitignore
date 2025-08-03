@@ -20,3 +20,9 @@ dj_response_map.json
 
 # Ignore system files
 .DS_Store*.onnx
+
+# Allowing the upload of Jingles for SHRQ Radio
+!shrq_radio/jingles/shrq_cant_defund.mp3
+!shrq_radio/jingles/shrq_dont_complain.mp3
+!shrq_radio/jingles/shrq_strange_taste.mp3
+!shrq_radio/jingles/shrq_tagline.mp3
