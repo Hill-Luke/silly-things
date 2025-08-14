@@ -1,0 +1,23 @@
+[project]
+name = "house_hunter"
+version = "0.1.0"
+description = "house_hunter using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]>=0.157.0,<1.0.0"
+]
+
+[project.scripts]
+house_hunter = "house_hunter.main:run"
+run_crew = "house_hunter.main:run"
+train = "house_hunter.main:train"
+replay = "house_hunter.main:replay"
+test = "house_hunter.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"

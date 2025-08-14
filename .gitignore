@@ -29,3 +29,8 @@ dj_response_map.json
 !shrq_radio/jingles/shrq_hard_drive.mp3
 !shrq_radio/jingles/shrq_warning.mp3
 !shrq_radio/jingles/shrq_its_random.mp3
+shrq_radio/TTS_tests/en_US-hfc_female-medium.onnx.json
+.gitignore
+shrq_radio/TTS_tests/en_US-joe-medium.onnx.json
+shrq_radio/TTS_tests/en_US-lessac-high.onnx.json
+.gitignore

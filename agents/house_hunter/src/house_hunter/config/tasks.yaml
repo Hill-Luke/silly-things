@@ -1,0 +1,18 @@
+research_task:
+  description: >
+    Conduct a thorough research about homes, condominiums, or apartment units that are currently for sale in the {neighborhood} area of {city}
+    Make sure you scan for recent listings on common real estate websites like Redfin, Zillow, or Realtor.com
+    the current year is {current_year}.
+  expected_output: >
+    A list with 10 bullet points of the most recent home listings for salin the {neighborhood} area of {city}. 
+    Each bullet should contain the price, number of bedrooms, number of bathrooms, square footage, year built, and relevant web link to the listing.
+  agent: real_estate_agent
+
+filter_listings:
+  description: >
+    Review the homes for sale you found and filter to only keep listings that cost between $200,000 and $400,000 USD
+  expected_output: >
+    A filtered list of of properties that contain the price, number of bedrooms, number of bathrooms, square footage, year built, and relevant web link to the listing.
+    If fewer than 5 houses meet the criteria, state "Not enough homes for sale as of {today}."
+    Formatted as markdown without '```'
+  agent: reporting_analyst
