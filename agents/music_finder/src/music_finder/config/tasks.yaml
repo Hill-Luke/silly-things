@@ -1,0 +1,17 @@
+research_task:
+  description: >
+    Conduct a thorough research about new and up-and-coming artists who are creating buzz in the {genre} genre. 
+    Focus your search on artists who made music in the following timeperiod: {timeperiod}
+    Make sure you find their most popular songs and include it in your results.
+  expected_output: >
+    a short summary of the artist, their top three songs, and links to their bandcamp or spotify profile.
+  agent: music_journalist
+
+mp3_downloader:
+  description: >
+    Review the artists you got and their top three songs.
+    Search the web for free .mp3 downloads of any of the top three songs identified. 
+    Use only reputable sites that allow free downloads for promotion purposes. No torrents or downloads from questionable sources.
+  expected_output: >
+    a report of the artist, song, and link to download the .mp3 file
+  agent: web_researcher
