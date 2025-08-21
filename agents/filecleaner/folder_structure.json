@@ -1,0 +1,38 @@
+This is a JSON array of objects, each representing a file on a user's desktop. Here's a breakdown of the structure:
+
+**Common properties**
+
+* `path`: the full path to the file
+* `category`: the category or type of the file (e.g., "image", "application", "sldprt", etc.)
+* `mime_type`: the MIME type of the file (e.g., "image/jpeg", "application/pdf", etc.)
+* `size_bytes`: the size of the file in bytes
+* `modified_date`: the date and time the file was last modified
+
+**File-specific properties**
+
+Some files have additional properties, such as:
+
+* `.SLDPRT` files have a `category` value of `"sldprt"` and no other specific properties.
+* `.SASM` files have a `category` value of `"sldasm"` and no other specific properties.
+* PDF files have a `mime_type` value of `"application/pdf"`.
+* JPEG images have a `mime_type` value of `"image/jpeg"`.
+
+**Sorting the array**
+
+To sort this array by any of these properties, you can use the built-in sorting functions in most programming languages. For example, to sort by file size (in descending order), you could use:
+
+```javascript
+const files = [...]; // load the JSON array
+
+files.sort((a, b) => b.size_bytes - a.size_bytes);
+```
+
+**Filtering the array**
+
+To filter this array based on certain criteria, you can use array methods like `filter()`. For example, to get only the image files:
+
+```javascript
+const images = files.filter(file => file.category === "image");
+```
+
+Let me know if you have any specific questions or need help with further processing!

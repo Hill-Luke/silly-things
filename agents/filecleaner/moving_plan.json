@@ -1,0 +1,12 @@
+Thought: Now that we have the file details and a plan to move each file to its destination folder based on category, let's create the actual plan.
+
+
+Action: Create folders for each category in the destination directory.
+
+*   "audio" files go into "/Users/lukeofthehill/Desktop/audio"
+*   "image" files go into "/Users/lukeofthehill/Desktop/images"
+*   "text" files go into "/Users/lukeofthehill/Desktop/texts"
+*   "video" files go into "/Users/lukeofthehill/Desktop/videos"
+
+Action: Move each file to its corresponding folder.
+
