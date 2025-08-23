@@ -1,6 +1,8 @@
 # SHRQ Radio
 
-SHRQ Radio is a retro-style radio mix generator that combines DJ voiceovers with randomized music tracks, along with NPR and TPR news clips. It's designed for local use and outputs a single mixed MP3 file you can play as your own radio station. SHRQ is compatible with Mac, Linux, and Windows. However, most of the development has been on the Mac/Linux side so Windows is missing some features.
+SHRQ Radio is a retro-style radio mix generator that combines DJ voiceovers with randomized music tracks, along with NPR and TPR news clips. It's designed for local use and outputs a single mixed MP3 file you can play as your own radio station. See a [demo here](https://youtube.com/shorts/-VCyQLLbfhU?feature=share).
+
+SHRQ is compatible with Mac, Linux, and Windows. However, most of the development has been on the Mac/Linux side so Windows is missing some features.
 
 ## Features
 
@@ -28,7 +30,8 @@ pip install -r requirements.txt
 4. **Install Ollama**
     - Download and install `ollama` from the [website](https://ollama.com/)
     - Once installed, pull `llama3.2:1b` for generating the DJ's script. You can pull whatever model you'd like to use, dependent on your hardware. I run this on a raspberry pi, so this smaller model works well and doesn't fry my cpu!
-5. **FOR MAC/LINUX USERS: Download the Piper TTS voice** Save it to the `TTS_tests` folder using `python3 -m piper.download_voices en_US-hfc_female-medium`
+5. **FOR MAC/LINUX USERS: Download the Piper TTS voice**
+  - Save it to the `TTS_tests` folder using `python3 -m piper.download_voices en_US-hfc_female-medium`
 5. **Store your MP3 music files in:** `shrq_radio/data/music/`
 
 ## Run
@@ -56,8 +59,3 @@ If ffmpeg or ffprobe are not found, the script will raise an error.
 ## Song Downloader:
 As I listened to my music, I realized that a lot of my music was still from when I was in High School, which was a good and a bad thing. I added a small program that downloads the KUTX Song of the Day from the website and adds it to your music folder. Helps keeps my music library fresh!
 
-### 📦 Requirements
-
-- Python 3.7+
-- `requests`
-- `beautifulsoup4`
