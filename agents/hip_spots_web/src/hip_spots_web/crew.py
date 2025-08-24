@@ -1,10 +1,12 @@
 from crewai import Agent, Crew, Process, Task
+from crewai import LLM
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
 from crewai_tools import ScrapeWebsiteTool
 from hip_spots_web.tools.custom_tool import DuckDuckGoTool
 from pathlib import Path
+import os
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
@@ -18,6 +20,8 @@ class HipSpots:
 
     search_tool = DuckDuckGoTool()
     scrape_tool = ScrapeWebsiteTool()
+    model_name = os.getenv("OLLAMA_MODEL", "ollama/llama3.2:1b")
+    ollama_llm = LLM(model=model_name, base_url="http://localhost:11434", temperature=0.2)
 
     # Learn more about YAML configuration files here:
     # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
@@ -31,6 +35,7 @@ class HipSpots:
             config=self.agents_config['researcher'],  # type: ignore[index]
             tools=[self.search_tool, self.scrape_tool],
             verbose=True,
+            llm=self.ollama_llm,
         )
 
     @agent
@@ -39,6 +44,7 @@ class HipSpots:
             config=self.agents_config['writer'],  # type: ignore[index]
             tools=[self.scrape_tool],
             verbose=True,
+            llm=self.ollama_llm,
         )
 
 
