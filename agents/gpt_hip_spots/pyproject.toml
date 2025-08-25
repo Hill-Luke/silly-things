@@ -1,0 +1,23 @@
+[project]
+name = "gpt_hip_spots"
+version = "0.1.0"
+description = "GPT_hip_spots using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]>=0.157.0,<1.0.0"
+]
+
+[project.scripts]
+gpt_hip_spots = "gpt_hip_spots.main:run"
+run_crew = "gpt_hip_spots.main:run"
+train = "gpt_hip_spots.main:train"
+replay = "gpt_hip_spots.main:replay"
+test = "gpt_hip_spots.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"

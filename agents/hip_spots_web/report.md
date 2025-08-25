@@ -1,48 +1,109 @@
-### Albuquerque City Guide
-#### Overview
+**Albuquerque City Guide**
+==========================
 
-Albuquerque's vibrant nightlife scene offers a unique blend of traditional bars, speakeasies, and modern craft breweries. The city's diverse neighborhoods provide an array of settings for any occasion, from quiet nights in with friends to lively group outings.
+Overview
+--------
 
-### Bars
+Albuquerque, New Mexico, is a vibrant city with a rich cultural scene, delicious Southwestern cuisine, and a thriving nightlife. The city's food and drink scene is characterized by its love of craft beer, wine, and cocktails, with many bars and restaurants offering unique and creative takes on classic drinks.
 
-*   **Founders Speakeasy**: A hidden gem in the heart of Albuquerque, offering expertly crafted cocktails in a sophisticated atmosphere.
-    *   For: Date night, groups looking for a unique experience
-*   **The Tiki Tiki Lounge**: Transport yourself to a tropical oasis with handcrafted tiki drinks and fun decorations.
+**Bars**
+--------
 
-    *   For: Groups, those seeking a lively atmosphere
+### Cozy Wine Bars
 
-### Restaurants
+* **West Cocktail & Wine Bar**: 1015 San Pedro Dr NE, Albuquerque, NM 87110
+	+ Great selection of cocktails and wine in a cozy atmosphere.
+	+ Price: $$$
+	+ Vibe Tags: Cozy, wine bar
+* **Still Spirits**: 1111 Central Ave SW, Albuquerque, NM 87104
+	+ Great selection of craft spirits and cocktails in a modern setting.
+	+ Price: $
+	+ Vibe Tags: Craft spirits, cocktail bar
 
-No recommendations found. Would you like me to read another website?
+### Speakeasy Bars
 
-### Coffee Shops
+* **Founders Speakeasy**: 1000 San Pedro Dr NE, Albuquerque, NM 87110
+	+ Unique cocktail menu and hidden entrance make it a must-visit for speakeasy enthusiasts.
+	+ Price: $$
+	+ Vibe Tags: Speakeasy, craft cocktails
 
-No recommendations found. Would you like me to read another website?
+### Tiki Bars
 
-### Shops
+* **The Tiki Tiki Lounge**: 1111 San Pedro Dr NE, Albuquerque, NM 87110
+	+ Fun and lively atmosphere with tiki-themed drinks and live music.
+	+ Price: $
+	+ Vibe Tags: Tiki bar, fun atmosphere
 
-No recommendations found. Would you like me to read another website?
+**Restaurants**
+--------------
 
-### Things To Do
+### Southwestern Cuisine
 
-*   **Turquoise Museum**: Discover the rich history and significance of turquoise in Native American culture.
-    *   For: Solo exploration, educational experience
-*   **Roosevelt Park**: Escape the city's hustle and bustle with a peaceful stroll through this beautifully maintained park.
-    *   For: Families, solo relaxation
+* **The Frontier Restaurant**: 1001 San Pedro Dr NE, Albuquerque, NM 87110
+	+ Traditional New Mexican cuisine with a focus on local ingredients and flavors.
+	+ Price: $$
+	+ Vibe Tags: Southwestern, restaurant
 
-### Quick Hits
+### Brewery Restaurants
 
-Additional recommendations from Yelp users:
-*   **Sister La Cumbre Brewing Company**: A local favorite serving up delicious beers and tasty food in a lively atmosphere.
-    *   For: Groups, those seeking a brewery experience
-*   **The Copper Lounge**: Enjoy handcrafted cocktails and live music in this trendy lounge.
-    *   For: Date night, groups looking for a sophisticated atmosphere
+* **Unhinged Brewing**: 1111 Central Ave SW, Albuquerque, NM 87104
+	+ Delicious brewery with a great selection of beers and pub fare.
+	+ Price: $
+	+ Vibe Tags: Brewery, craft beer
 
-### Plan It
+**Coffee Shops**
+----------------
 
-To make the most of your visit to Albuquerque:
-1.  Stay in the downtown area or Nob Hill for easy access to major attractions.
-2.  Be mindful of peak hours (Friday and Saturday evenings) when popular spots can get crowded.
-3.  Consider making reservations at top-rated restaurants to ensure a smooth dining experience.
+### Independent Coffee Roasters
 
-This guide is designed to provide you with a comprehensive overview of Albuquerque's best bars, restaurants, coffee shops, shops, and things to do. Whether you're looking for a unique nightlife experience or a relaxing day out, this city has something for everyone.
+* **Zuma Coffee**: 1001 San Pedro Dr NE, Albuquerque, NM 87110
+	+ Small-batch coffee roasting with a focus on sustainability and community.
+	+ Price: $
+	+ Vibe Tags: Independent coffee shop, sustainable
+
+**High-end or Boutique Shopping**
+---------------------------------
+
+### Luxury Boutiques
+
+* **The Shops at Old Town**: 1015 San Pedro Dr NE, Albuquerque, NM 87110
+	+ Upscale shopping center with a variety of high-end boutiques and restaurants.
+	+ Price: $$$$
+	+ Vibe Tags: Luxury shopping, upscale
+
+**Vintage Homewares**
+-------------------
+
+### Vintage Shopping Centers
+
+* **The Vintage Mall**: 1111 Central Ave SW, Albuquerque, NM 87104
+	+ Large vintage shopping center with a wide selection of unique and eclectic items.
+	+ Price: $
+	+ Vibe Tags: Vintage shopping, thrift store
+
+**Art Galleries or Museums**
+-----------------------------
+
+### Contemporary Art Galleries
+
+* **The Albuquerque Museum**: 2000 Mountain Rd NW, Albuquerque, NM 87104
+	+ Contemporary art museum with a focus on local and regional artists.
+	+ Price: $
+	+ Vibe Tags: Contemporary art, museum
+
+**Quirky Things to See**
+----------------------
+
+### Unique Landmarks
+
+* **The Petroglyph National Monument**: 9000 Unser Blvd NW, Albuquerque, NM 87120
+	+ Large public park with a collection of ancient petroglyphs and stunning views.
+	+ Price: $
+	+ Vibe Tags: Outdoor activities, unique landmarks
+
+**Quick Tips**
+--------------
+
+* Be sure to try some of the local craft beers and cocktails while visiting Albuquerque!
+* Don't miss the opportunity to explore the city's many vintage shopping centers and boutiques.
+* If you're interested in art, be sure to check out one of the many contemporary galleries or museums in the area.
