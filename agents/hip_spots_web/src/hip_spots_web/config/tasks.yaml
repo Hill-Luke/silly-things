@@ -14,10 +14,10 @@ research_bars:
     Check to see if each spot is permanently closed or not.
     If you can't find enough options, say so and give what you have.
     Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
-    Confirm the existence by searching for the location in Google Maps
+    Confirm the existence by searching for the location in using the OpenStreetMapTool
   expected_output: >
     A Markdown section per bucket with a short intro followed by a table:
-    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address | link to listing in google maps|
+    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address |
   agent: researcher
 
 research_restaurants:
@@ -36,10 +36,10 @@ research_restaurants:
     Check to see if each spot is permanently closed or not.
     If you can't find enough options, say so and give what you have.
     Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
-    Confirm the existence by searching for the location in Google Maps
+    Confirm the existence by searching for the location in using the OpenStreetMapTool
   expected_output: >
     A Markdown section per bucket with a short intro followed by a table:
-    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address | link to listing in google maps|
+    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address |
   agent: researcher
 
 research_coffee:
@@ -58,10 +58,10 @@ research_coffee:
     Check to see if each spot is permanently closed or not.
     If you can't find enough options, say so and give what you have.
     Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
-    Confirm the existence by searching for the location in Google Maps
+    Confirm the existence by searching for the location in using the OpenStreetMapTool
   expected_output: >
     A Markdown section per bucket with a short intro followed by a table:
-    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address | link to listing in google maps|
+    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address |
   agent: researcher
 
 research_shopping:
@@ -80,10 +80,10 @@ research_shopping:
     Check to see if each spot is permanently closed or not.
     If you can't find enough options, say so and give what you have.
     Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
-    Confirm the existence by searching for the location in Google Maps
+    Confirm the existence by searching for the location in using the OpenStreetMapTool
   expected_output: >
     A Markdown section per bucket with a short intro followed by a table:
-    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address | link to listing in google maps|
+    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address |
   agent: researcher
 
 research_homewares:
@@ -102,10 +102,10 @@ research_homewares:
     Check to see if each spot is permanently closed or not.
     If you can't find enough options, say so and give what you have.
     Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
-    Confirm the existence by searching for the location in Google Maps
+    Confirm the existence by searching for the location in using the OpenStreetMapTool
   expected_output: >
     A Markdown section per bucket with a short intro followed by a table:
-    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address | link to listing in google maps|
+    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address |
   agent: researcher
 
 research_art:
@@ -124,10 +124,10 @@ research_art:
     Check to see if each spot is permanently closed or not.
     If you can't find enough options, say so and give what you have.
     Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
-    Confirm the existence by searching for the location in Google Maps
+    Confirm the existence by searching for the location in using the OpenStreetMapTool
   expected_output: >
     A Markdown section per bucket with a short intro followed by a table:
-    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address | link to listing in google maps|
+    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address |
   agent: researcher
 
 research_quirky:
@@ -146,10 +146,10 @@ research_quirky:
     Check to see if each spot is permanently closed or not.
     If you can't find enough options, say so and give what you have.
     Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
-    Confirm the existence by searching for the location in Google Maps
+    Confirm the existence by searching for the location in using the OpenStreetMapTool
   expected_output: >
     A Markdown section per bucket with a short intro followed by a table:
-    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address | link to listing in google maps|
+    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address |
   agent: researcher
 
 compose_guide:

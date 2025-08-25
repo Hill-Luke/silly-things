@@ -4,7 +4,8 @@ from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
 from crewai_tools import ScrapeWebsiteTool
-from hip_spots_web.tools.custom_tool import DuckDuckGoTool
+from hip_spots_web.tools.custom_tool import DuckDuckGoTool, OpenStreetMapTool
+
 from pathlib import Path
 import os
 # If you want to run a snippet of code before or after the crew starts,
@@ -20,6 +21,8 @@ class HipSpots:
 
     search_tool = DuckDuckGoTool()
     scrape_tool = ScrapeWebsiteTool()
+    osm_tool = OpenStreetMapTool()
+    
     model_name = os.getenv("OLLAMA_MODEL", "ollama/llama3.2:3b")
     ollama_llm = LLM(model=model_name, base_url="http://localhost:11434", temperature=0.2)
 
@@ -33,7 +36,7 @@ class HipSpots:
     def researcher(self) -> Agent:
         return Agent(
             config=self.agents_config['researcher'],  # type: ignore[index]
-            tools=[self.search_tool, self.scrape_tool],
+            tools=[self.search_tool, self.scrape_tool,self.osm_tool],
             verbose=True,
             llm=self.ollama_llm,
         )

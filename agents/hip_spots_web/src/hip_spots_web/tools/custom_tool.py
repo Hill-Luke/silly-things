@@ -35,3 +35,46 @@ class DuckDuckGoTool(BaseTool):
             return f"DDG search error: {e}"
 
         return json.dumps(results, ensure_ascii=False)
+    
+
+import requests
+import json
+
+class OSMInput(BaseModel):
+    """Input schema for OpenStreetMapTool."""
+    query: str = Field(..., description="Place name and city to search in OpenStreetMap")
+
+class OpenStreetMapTool(BaseTool):
+    name: str = "OpenStreetMap Search"
+    description: str = (
+        "Searches OpenStreetMap via the Nominatim API. Input a place name and city; "
+        "returns JSON list of results with name, display_name, lat, lon."
+    )
+    args_schema: Type[BaseModel] = OSMInput
+
+    def _run(self, query: str) -> str:
+        url = "https://nominatim.openstreetmap.org/search"
+        params = {
+            "q": query,
+            "format": "json",
+            "limit": 5
+        }
+        try:
+            headers = {"User-Agent": "hip-spots-web/1.0 (your_email@example.com)"}
+            resp = requests.get(url, params=params, headers=headers, timeout=10)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            return json.dumps({"error": str(e)}, ensure_ascii=False)
+
+        # Extract only relevant info
+        results: List[dict] = []
+        for r in data:
+            results.append({
+                "name": r.get("display_name"),
+                "lat": r.get("lat"),
+                "lon": r.get("lon"),
+                "type": r.get("type"),
+            })
+
+        return json.dumps(results, ensure_ascii=False)
