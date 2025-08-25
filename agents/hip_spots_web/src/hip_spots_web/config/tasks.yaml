@@ -1,11 +1,9 @@
-research_spots:
+research_bars:
   description: >
-    Research the city of {city} and find WELL-REVIEWED places across the following categories:
-    Cocktail/Wine Bars, Coffee Shops, Vinyl Records, High-end or Boutique Shopping,
-    Vintage Homewares, Art Galleries or Museums, Quirky things to see. Prioritize recent reviews
-    and credible sources (Reddit, local blogs, newspapers, Eater/Infatuation, Google/Maps).
+    Research the city of {city} and find WELL-REVIEWED Cocktail/Wine Bars. 
+    Prioritize recent reviews and sources like Reddit, newspapers, Google Maps.
     Scrape no more than 5 pages per listing.
-    Return 5 to 8 options per bucket (fewer for small cities), each with:
+    Return 5 to 8 options, each with:
     - name
     - neighborhood/area
     - 1 to 2 sentence why-it's-good
@@ -14,11 +12,144 @@ research_spots:
     - 1 to 3 source links
     Return only factual bullet summaries with source URLs. Avoid speculation.
     Check to see if each spot is permanently closed or not.
-    If you can't find enough options in a bucket, say so and give what you have.
+    If you can't find enough options, say so and give what you have.
     Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
+    Confirm the existence by searching for the location in Google Maps
   expected_output: >
     A Markdown section per bucket with a short intro followed by a table:
-    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources |
+    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address | link to listing in google maps|
+  agent: researcher
+
+research_restaurants:
+  description: >
+    Research the city of {city} and find WELL-REVIEWED restaurants and cafes. 
+    Prioritize recent reviews and sources like Reddit, newspapers, Google Maps.
+    Scrape no more than 5 pages per listing.
+    Return 5 to 8 options, each with:
+    - name
+    - neighborhood/area
+    - 1 to 2 sentence why-it's-good
+    - rough price level ($ to $$$)
+    - vibe tags (e.g., cozy, natural wine, third-wave, date-night)
+    - 1 to 3 source links
+    Return only factual bullet summaries with source URLs. Avoid speculation.
+    Check to see if each spot is permanently closed or not.
+    If you can't find enough options, say so and give what you have.
+    Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
+    Confirm the existence by searching for the location in Google Maps
+  expected_output: >
+    A Markdown section per bucket with a short intro followed by a table:
+    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address | link to listing in google maps|
+  agent: researcher
+
+research_coffee:
+  description: >
+    Research the city of {city} and find WELL-REVIEWED, local Specialty Coffee Shops. 
+    Prioritize recent reviews and sources like Reddit, newspapers, Google Maps.
+    Scrape no more than 5 pages per listing.
+    Return 5 to 8 options, each with:
+    - name
+    - neighborhood/area
+    - 1 to 2 sentence why-it's-good
+    - rough price level ($ to $$$)
+    - vibe tags (e.g., cozy, natural wine, third-wave, date-night)
+    - 1 to 3 source links
+    Return only factual bullet summaries with source URLs. Avoid speculation.
+    Check to see if each spot is permanently closed or not.
+    If you can't find enough options, say so and give what you have.
+    Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
+    Confirm the existence by searching for the location in Google Maps
+  expected_output: >
+    A Markdown section per bucket with a short intro followed by a table:
+    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address | link to listing in google maps|
+  agent: researcher
+
+research_shopping:
+  description: >
+    Research the city of {city} and find WELL-REVIEWED High-end or Boutique Shopping. 
+    Prioritize recent reviews and sources like Reddit, newspapers, Google Maps.
+    Scrape no more than 5 pages per listing.
+    Return 5 to 8 options, each with:
+    - name
+    - neighborhood/area
+    - 1 to 2 sentence why-it's-good
+    - rough price level ($ to $$$)
+    - vibe tags (e.g., cozy, natural wine, third-wave, date-night)
+    - 1 to 3 source links
+    Return only factual bullet summaries with source URLs. Avoid speculation.
+    Check to see if each spot is permanently closed or not.
+    If you can't find enough options, say so and give what you have.
+    Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
+    Confirm the existence by searching for the location in Google Maps
+  expected_output: >
+    A Markdown section per bucket with a short intro followed by a table:
+    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address | link to listing in google maps|
+  agent: researcher
+
+research_homewares:
+  description: >
+    Research the city of {city} and find WELL-REVIEWED Vintage Homewares. 
+    Prioritize recent reviews and sources like Reddit, newspapers, Google Maps.
+    Scrape no more than 5 pages per listing.
+    Return 5 to 8 options, each with:
+    - name
+    - neighborhood/area
+    - 1 to 2 sentence why-it's-good
+    - rough price level ($ to $$$)
+    - vibe tags (e.g., cozy, natural wine, third-wave, date-night)
+    - 1 to 3 source links
+    Return only factual bullet summaries with source URLs. Avoid speculation.
+    Check to see if each spot is permanently closed or not.
+    If you can't find enough options, say so and give what you have.
+    Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
+    Confirm the existence by searching for the location in Google Maps
+  expected_output: >
+    A Markdown section per bucket with a short intro followed by a table:
+    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address | link to listing in google maps|
+  agent: researcher
+
+research_art:
+  description: >
+    Research the city of {city} and find WELL-REVIEWED Art Galleries or Museums. 
+    Prioritize recent reviews and sources like Reddit, newspapers, Google Maps.
+    Scrape no more than 5 pages per listing.
+    Return 5 to 8 options, each with:
+    - name
+    - neighborhood/area
+    - 1 to 2 sentence why-it's-good
+    - rough price level ($ to $$$)
+    - vibe tags (e.g., cozy, natural wine, third-wave, date-night)
+    - 1 to 3 source links
+    Return only factual bullet summaries with source URLs. Avoid speculation.
+    Check to see if each spot is permanently closed or not.
+    If you can't find enough options, say so and give what you have.
+    Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
+    Confirm the existence by searching for the location in Google Maps
+  expected_output: >
+    A Markdown section per bucket with a short intro followed by a table:
+    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address | link to listing in google maps|
+  agent: researcher
+
+research_quirky:
+  description: >
+    Research the city of {city} and find WELL-REVIEWED Quirky things to see. 
+    Prioritize recent reviews and sources like Reddit, newspapers, Google Maps.
+    Scrape no more than 5 pages per listing.
+    Return 5 to 8 options, each with:
+    - name
+    - neighborhood/area
+    - 1 to 2 sentence why-it's-good
+    - rough price level ($ to $$$)
+    - vibe tags (e.g., cozy, natural wine, third-wave, date-night)
+    - 1 to 3 source links
+    Return only factual bullet summaries with source URLs. Avoid speculation.
+    Check to see if each spot is permanently closed or not.
+    If you can't find enough options, say so and give what you have.
+    Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
+    Confirm the existence by searching for the location in Google Maps
+  expected_output: >
+    A Markdown section per bucket with a short intro followed by a table:
+    | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources | Address | link to listing in google maps|
   agent: researcher
 
 compose_guide:
@@ -27,8 +158,8 @@ compose_guide:
     practical. 
     Do not repeat listings. If a place is recommended twice (e.g. restaurant that is also a bar), just include it once. 
     Include:
-    - A 2 to 3 sentence overview of the city's food/coffee/bar vibe
-    - Sections: Bars, Coffee Shops, Vinyl Records, High-end or Boutique Shopping,
+    - A 2 to 3 sentence overview of the city's food/coffee/bar vibe. Provide the address to the recommendation
+    - Sections: Bars, Restaurants, Coffee Shops, High-end or Boutique Shopping,
     Vintage Homewares, Art Galleries or Museums, Quirky things to see
   expected_output: >
     A polished Markdown guide with clear headings, concise blurbs, and a quick

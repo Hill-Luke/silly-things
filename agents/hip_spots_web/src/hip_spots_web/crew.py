@@ -52,9 +52,33 @@ class HipSpots:
     # task dependencies, and task callbacks, check out the documentation:
     # https://docs.crewai.com/concepts/tasks#overview-of-a-task
     @task
-    def research_task(self) -> Task:
+    def research_bars(self) -> Task:
         return Task(
-            config=self.tasks_config['research_spots'], # type: ignore[index]
+            config=self.tasks_config['research_bars'], # type: ignore[index]
+        )
+    def research_coffee(self) -> Task:
+        return Task(
+            config=self.tasks_config['research_coffee'], # type: ignore[index]
+        )
+    def research_shopping(self) -> Task:
+        return Task(
+            config=self.tasks_config['research_shopping'], # type: ignore[index]
+        )
+    def research_homewares(self) -> Task:
+        return Task(
+            config=self.tasks_config['research_homewares'], # type: ignore[index]
+        )
+    def research_art(self) -> Task:
+        return Task(
+            config=self.tasks_config['research_art'], # type: ignore[index]
+        )
+    def research_quirky(self) -> Task:
+        return Task(
+            config=self.tasks_config['research_quirky'], # type: ignore[index]
+        )
+    def research_restaurants(self) -> Task:
+        return Task(
+            config=self.tasks_config['research_restaurants'], # type: ignore[index]
         )
 
     @task
@@ -62,7 +86,7 @@ class HipSpots:
         return Task(
             config=self.tasks_config['compose_guide'], # type: ignore[index]
             output_file='report.md',
-            context=[self.research_task()],
+            context=[self.research_bars(),self.research_coffee(),self.research_shopping(),self.research_homewares(),self.research_art(),self.research_quirky(),self.research_restaurants()],
         )
 
     @crew
