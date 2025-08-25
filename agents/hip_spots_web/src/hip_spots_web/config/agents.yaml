@@ -11,7 +11,7 @@ researcher:
   llm:
   provider: ollama
   config:
-    model: ollama/llama3.2
+    model: ollama/llama3.2:3b
     base_url: http://localhost:11434
     temperature: 0.2
     max_tokens: 800
@@ -25,7 +25,7 @@ writer:
   llm:
   provider: ollama
   config:
-    model: ollama/llama3.2
+    model: ollama/llama3.2:3b
     base_url: http://localhost:11434
     temperature: 0.2
     max_tokens: 800

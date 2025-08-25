@@ -1,8 +1,10 @@
 research_spots:
   description: >
-    Research the city of {city} and find WELL-REVIEWED places across four buckets:
-    Bars, Restaurants, Coffee Shops, and Things To Do. Prioritize recent reviews
+    Research the city of {city} and find WELL-REVIEWED places across the following categories:
+    Cocktail/Wine Bars, Coffee Shops, Vinyl Records, High-end or Boutique Shopping,
+    Vintage Homewares, Art Galleries or Museums, Quirky things to see. Prioritize recent reviews
     and credible sources (Reddit, local blogs, newspapers, Eater/Infatuation, Google/Maps).
+    Scrape no more than 5 pages per listing.
     Return 5 to 8 options per bucket (fewer for small cities), each with:
     - name
     - neighborhood/area
@@ -10,9 +12,10 @@ research_spots:
     - rough price level ($ to $$$)
     - vibe tags (e.g., cozy, natural wine, third-wave, date-night)
     - 1 to 3 source links
-    If the user provides preferences (e.g., “no BBQ”), respect them and exclude. 
+    Return only factual bullet summaries with source URLs. Avoid speculation.
     Check to see if each spot is permanently closed or not.
     If you can't find enough options in a bucket, say so and give what you have.
+    Use only details explicitly found in sources. Do not speculate or invent. If context is insufficient, clearly state "Not enough reliable information found."
   expected_output: >
     A Markdown section per bucket with a short intro followed by a table:
     | Name | Neighborhood | Why It's Good | Price | Vibe Tags | Sources |
@@ -21,14 +24,14 @@ research_spots:
 compose_guide:
   description: >
     Turn the research into a tight, skimmable city guide. Keep it upbeat and
-    practical. Include:
+    practical. 
+    Do not repeat listings. If a place is recommended twice (e.g. restaurant that is also a bar), just include it once. 
+    Include:
     - A 2 to 3 sentence overview of the city's food/coffee/bar vibe
-    - Sections: Bars, Restaurants, Coffee Shops, Shops, Things To Do
-    - Within each section, pick the top 3 to 5 highlights and explain who they're for
-      (date night, group hang, solo laptop, etc.)
-    - “Quick Hits” list for extra picks
-    - A final “Plan It” box with tips: best areas to stay, peak hours, reservations
+    - Sections: Bars, Coffee Shops, Vinyl Records, High-end or Boutique Shopping,
+    Vintage Homewares, Art Galleries or Museums, Quirky things to see
   expected_output: >
     A polished Markdown guide with clear headings, concise blurbs, and a quick
-    tips box at the end. Each heading should contain at least three recommendations
+    tips box at the end. Each heading should contain at least three recommendations. 
+    The total output must be at least 600 words.
   agent: writer

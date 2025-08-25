@@ -20,7 +20,7 @@ class HipSpots:
 
     search_tool = DuckDuckGoTool()
     scrape_tool = ScrapeWebsiteTool()
-    model_name = os.getenv("OLLAMA_MODEL", "ollama/llama3.2:1b")
+    model_name = os.getenv("OLLAMA_MODEL", "ollama/llama3.2:3b")
     ollama_llm = LLM(model=model_name, base_url="http://localhost:11434", temperature=0.2)
 
     # Learn more about YAML configuration files here:
@@ -42,7 +42,7 @@ class HipSpots:
     def writer(self) -> Agent:
         return Agent(
             config=self.agents_config['writer'],  # type: ignore[index]
-            tools=[self.scrape_tool],
+            tools=[],  # writer should not call tools; it composes from context
             verbose=True,
             llm=self.ollama_llm,
         )
@@ -61,7 +61,8 @@ class HipSpots:
     def reporting_task(self) -> Task:
         return Task(
             config=self.tasks_config['compose_guide'], # type: ignore[index]
-            output_file='report.md'
+            output_file='report.md',
+            context=[self.research_task()],
         )
 
     @crew
