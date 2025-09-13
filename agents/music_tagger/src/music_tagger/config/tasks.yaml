@@ -41,3 +41,10 @@ playlist_classification_task:
   expected_output: >
     A JSON array with one object per file containing all results (file path, BPM, speed, RMS, LUFS, intensity, final energy classification).
   agent: energy_curator
+
+file_tagging_task:
+  description: >
+    Take the results from playlist_classification_task and use the FileTaggerTool to update the metadata of each corresponding .mp3 file with its energy classification.
+  expected_output: >
+    A confirmation JSON including each file path and the energy classification that was written, confirming the metadata update via the FileTaggerTool.
+  agent: file_tagger

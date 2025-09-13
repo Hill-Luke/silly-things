@@ -27,3 +27,13 @@ energy_curator:
     You are a master curator who synthesizes multiple expert analyses into a single cohesive judgment.
   model: ollama/llama3.2:3b
   base_url: http://localhost:11434
+
+file_tagger:
+  role: >
+    MP3 Metadata Tagger
+  goal: >
+    Update each .mp3 file's metadata to include the computed energy classification.
+  backstory: >
+    You're a file system and metadata specialist that ensures analysis results are written back to the audio files themselves.
+  model: ollama/llama3.2:3b
+  base_url: http://localhost:11434

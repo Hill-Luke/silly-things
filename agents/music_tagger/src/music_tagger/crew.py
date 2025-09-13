@@ -2,7 +2,7 @@ from crewai import Agent, Task, Crew, Process
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
-from .tools.custom_tool import BPMTool, AudioPreprocessTool, LUFSTool
+from .tools.custom_tool import BPMTool, AudioPreprocessTool, LUFSTool, FileTaggerTool
 
 
 @CrewBase
@@ -33,6 +33,14 @@ class MusicTagger():
         # This agent integrates results, no tools needed
         return Agent(
             config=self.agents_config['energy_curator'],  # type: ignore[index]
+            verbose=True
+        )
+
+    @agent
+    def file_tagger(self) -> Agent:
+        return Agent(
+            config=self.agents_config['file_tagger'],  # type: ignore[index]
+            tools=[FileTaggerTool()],
             verbose=True
         )
 
@@ -71,6 +79,14 @@ class MusicTagger():
         return Task(
             config=self.tasks_config['playlist_classification_task'],  # type: ignore[index]
             inputs={"filepaths": "{filepaths}"}
+        )
+
+    @task
+    def file_tagging_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['file_tagging_task'],  # type: ignore[index]
+            inputs={"filepaths": "{filepaths}"},
+            context=[self.playlist_classification_task()]
         )
 
     @crew

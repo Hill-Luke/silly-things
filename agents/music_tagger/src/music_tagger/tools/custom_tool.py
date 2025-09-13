@@ -84,3 +84,41 @@ class LUFSTool(BaseTool):
                 f"Error processing LUFS for {filepath}: {repr(e)}\nTraceback:\n{tb}\n"
                 f"numpy={np.__version__} librosa={librosa.__version__}"
             )
+        
+from mutagen.easyid3 import EasyID3
+from mutagen.id3 import ID3, ID3NoHeaderError, TXXX
+
+class FileTaggerToolInput(BaseModel):
+    """Input schema for FileTaggerTool."""
+    filepath: str = Field(..., description="Path to the mp3 file to update.")
+    energy_classification: str = Field(..., description="Energy classification string to embed in the mp3 metadata.")
+
+class FileTaggerTool(BaseTool):
+    name: str = "File Tagger Tool"
+    description: str = "Writes the computed energy classification into the metadata of an MP3 file."
+    args_schema: Type[BaseModel] = FileTaggerToolInput
+
+    def _run(self, filepath: str, energy_classification: str) -> str:
+        try:
+            # Load or initialize ID3 tags
+            try:
+                tags = ID3(filepath)
+            except ID3NoHeaderError:
+                tags = ID3()
+
+            # Add/update a custom TXXX frame for energy classification
+            tags.add(
+                TXXX(
+                    encoding=3,  # UTF-8
+                    desc="EnergyClassification",
+                    text=energy_classification
+                )
+            )
+
+            # Save back to file
+            tags.save(filepath)
+
+            return f"Updated {filepath} with EnergyClassification={energy_classification}"
+        except Exception as e:
+            tb = traceback.format_exc()
+            return f"Error tagging {filepath}: {repr(e)}\nTraceback:\n{tb}"
