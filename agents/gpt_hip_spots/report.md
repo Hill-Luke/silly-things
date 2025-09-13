@@ -1,115 +1,103 @@
-```markdown
-# Santa Fe, NM City Guide
+# Santa Fe City Guide
 
-Santa Fe, New Mexico, is a vibrant hub where artistic expression meets culinary innovation. The city buzzes with eclectic bars, unique coffee shops, and exquisite restaurants that celebrate a fusion of southwestern flavors. Santa Fe offers an inviting atmosphere for sipping craft cocktails, indulging in gourmet dishes, and exploring cultural landmarks—all against a backdrop of rich history and stunning landscapes.
+Santa Fe, with its rich history and vibrant culture, offers a delightful array of food, coffee, and bar experiences. The city is renowned for its southwestern cuisine, artistic coffee spots, and eclectic bar scene. Here’s an organized guide to help you explore Santa Fe.
 
 ## Bars
+1. **Santa Fe Spirits Distillery and Bar**
+   - Address: 308 Read St, Santa Fe, NM 87501
+   - This cozy bar offers a locally distilled range of spirits, perfect for enjoying a neat drink or a crafted cocktail. It’s the ideal spot for spirit enthusiasts.
+   
+2. **The Teahouse**
+   - Address: 821 Canyon Rd, Santa Fe, NM 87501
+   - A unique mix of a café and bar nestled on the famous Canyon Road, offering a sophisticated selection of teas and inventive cocktails.
 
-1. **Santa Fe Sage Inn**  
-   *Neighborhood:* Cerrillos Road Area  
-   *Address:* 727 Cerrillos Road, Santa Fe, NM, 87505  
-   A charming spot for cocktails in a relaxed setting.
-
-2. **El Farol**  
-   *Neighborhood:* Canyon Road  
-   *Address:* 808 Canyon Road, Santa Fe, NM, 87501  
-   Known for its lively atmosphere and historic charm, El Farol offers a robust selection of wines and live music performances.
-
-3. **Gruet Winery Tasting Room**  
-   *Neighborhood:* Barrio de Analco Historic District  
-   *Address:* 210 Don Gaspar Avenue, Santa Fe, NM, 87501  
-   Experience local wines in an intimate setting showcasing the best of New Mexico's wine country.
+3. **Draft Station**
+   - Address: 60 E San Francisco St, Santa Fe, NM 87501
+   - Overlooking the historic Plaza, this bar has an ever-changing variety of local craft beers, perfect for a casual evening with friends.
 
 ## Restaurants
+1. **Cafe Pasqual's**
+   - Address: 121 Don Gaspar Ave, Santa Fe, NM 87501
+   - Known for its vibrant decor and farm-to-table menu, this café offers a perfect blend of New Mexican, Mexican, and Asian flavors.
 
-1. **The Shed**  
-   *Address:* 113½ E Palace Ave, Santa Fe, NM 87501  
-   Enjoy traditional New Mexican cuisine with famous red and green chile dishes.
+2. **The Shed**
+   - Address: 113 1/2 E Palace Ave, Santa Fe, NM 87501
+   - An authentic New Mexican restaurant famed for its traditional dishes like blue corn enchiladas and red chile sauces.
 
-2. **Coyote Cafe**  
-   *Address:* 132 W Water St, Santa Fe, NM 87501  
-   Offering an inventive take on Southwestern cuisine with an upscale twist.
-
-3. **Geronimo**  
-   *Address:* 724 Canyon Rd, Santa Fe, NM 87501  
-   Celebrate special occasions with a menu influenced by global culinary traditions.
+3. **La Choza**
+   - Address: 905 Alarid St, Santa Fe, NM 87505
+   - A sister restaurant to The Shed, La Choza serves equally delicious New Mexican fare in a slightly less crowded setting.
 
 ## Coffee Shops
+1. **Java Joe's**
+   - Address: 2801 Rodeo Rd, Santa Fe, NM 87507
+   - A locals’ favorite, known for its inviting atmosphere, freshly baked goods, and aromatic coffee brews.
 
-1. **Java Joe's**  
-   *Address:* 2801 Rodeo Rd, Santa Fe, NM 87505  
-   This bustling café is known for its strong brews and welcoming community vibe.
+2. **Ohori's Coffee Roasters**
+   - Address: 1098 S St Francis Dr, Santa Fe, NM 87505
+   - Dedicated to providing high-quality, responsibly sourced coffee with options for both traditional and specialty drinks.
 
-2. **Ohori's Coffee Roasters**  
-   *Address:* 505 Cerrillos Rd, Santa Fe, NM 87501  
-   Specialty coffee roasters serving high-quality, small-batch coffees.
-
-3. **Iconik Coffee Roasters**  
-   *Address:* 1600 Lena St # A2, Santa Fe, NM 87505  
-   Known for artisanal roasts and a trendy atmosphere.
+3. **Counter Culture Café**
+   - Address: 930 Baca St #1, Santa Fe, NM 87505
+   - Offers a full range of coffee drinks in a laid-back setting, ideal for a morning or afternoon caffeine fix.
 
 ## High-end or Boutique Shopping
+1. **The Shops at La Fonda**
+   - Address: 100 E San Francisco St, Santa Fe, NM 87501
+   - The perfect spot for shopping for unique boutique clothing and handcrafted jewelry.
 
-1. **Santa Fe Dry Goods**  
-   *Address:* 53 Old Santa Fe Trail, Santa Fe, NM 87501  
-   A haven for fashion enthusiasts, this boutique offers exquisite clothing and accessories.
+2. **Shiprock Santa Fe**
+   - Address: 53 Old Santa Fe Trail, Santa Fe, NM 87501
+   - Specializes in authentic Native American art and jewelry, providing a culturally rich shopping experience.
 
-2. **Shiprock Santa Fe**  
-   *Address:* 53 Old Santa Fe Trail, Santa Fe, NM 87501  
-   Discover a curated selection of high-end Native American art and jewelry.
-
-3. **Packard's on the Plaza**  
-   *Address:* 61 Old Santa Fe Trail, Santa Fe, NM 87501  
-   Shop for luxurious gifts and Southwestern charm at this iconic plaza fixture.
+3. **Gerald Peters Gallery**
+   - Address: 1005 Paseo De Peralta, Santa Fe, NM 87501
+   - Featuring an impressive selection of fine art and antiques, it's a must-visit for art collectors.
 
 ## Vintage Homewares
+1. **Double Take**
+   - Address: 320 Aztec St, Santa Fe, NM 87501
+   - Offers a wide array of vintage home goods, from furniture to décor, perfect for treasure hunters.
 
-1. **Double Take**  
-   *Address:* 320 Aztec St, Santa Fe, NM 87501  
-   Find unique vintage homeware and consignment treasures in this eclectic store.
+2. **The Raven**
+   - Address: 541 W Cordova Rd, Santa Fe, NM 87505
+   - A curated selection of antique and vintage home furnishings with a distinct Santa Fe flair.
 
-2. **The Raven Fine Consignments**  
-   *Address:* 1225 Cerrillos Rd, Santa Fe, NM 87505  
-   A reputed stop for vintage home furnishings and antiques.
-
-3. **The Issues Gallery**  
-   *Address:* 80 E San Francisco St, Santa Fe, NM 87501  
-   Unique collection of vintage and artisanal furniture items.
+3. **Stephen’s A Consignment Gallery**
+   - Address: 2701 Cerrillos Rd, Santa Fe, NM 87505
+   - Features a vast range of vintage and contemporary furnishings for those looking to add unique pieces to their homes.
 
 ## Art Galleries or Museums
+1. **Georgia O'Keeffe Museum**
+   - Address: 217 Johnson St, Santa Fe, NM 87501
+   - Celebrates the work and legacy of O’Keeffe, one of America's most significant artists, with rotating exhibits.
 
-1. **Georgia O'Keeffe Museum**  
-   *Address:* 217 Johnson St, Santa Fe, NM 87501  
-   Celebrate the legacy of Georgia O'Keeffe with an extensive collection of her iconic works.
+2. **Meow Wolf's House of Eternal Return**
+   - Address: 1352 Rufina Cir, Santa Fe, NM 87507
+   - A mind-bending, immersive art experience perfect for all ages, blending art, storytelling, and technology.
 
-2. **Museum of International Folk Art**  
-   *Address:* 706 Camino Lejo, Santa Fe, NM 87505  
-   Explore vibrant displays of global folk art and cultural artifacts.
-
-3. **SITE Santa Fe**  
-   *Address:* 1606 Paseo De Peralta, Santa Fe, NM 87501  
-   Experience contemporary art exhibitions pushing boundaries with cutting-edge installations.
+3. **Museum of International Folk Art**
+   - Address: 706 Camino Lejo, Santa Fe, NM 87505
+   - Houses the largest collection of international folk art in the world, offering a diverse experience.
 
 ## Quirky Things to See
+1. **Loretto Chapel**
+   - Address: 207 Old Santa Fe Trail, Santa Fe, NM 87501
+   - Known for its mysterious spiral staircase, rumored to have been built by a divine craftsman.
 
-1. **Meow Wolf's House of Eternal Return**  
-   *Address:* 1352 Rufina Cir, Santa Fe, NM 87507  
-   An immersive art experience combining storytelling and technology—a must-see.
+2. **The Oldest House**
+   - Address: 215 E De Vargas St, Santa Fe, NM 87501
+   - Explore one of the oldest houses in the USA, with historical exhibits that bring Santa Fe’s past to life.
 
-2. **Loretto Chapel**  
-   *Address:* 207 Old Santa Fe Trail, Santa Fe, NM 87501  
-   Visit the iconic chapel known for its miraculous spiral staircase.
-
-3. **Santa Fe Railyard**  
-   *Address:* 332 Read St, Santa Fe, NM 87501  
-   This revitalized area offers a mix of art, culture, and shopping with a whimsical flair.
+3. **Santa Fe Railyard**
+   - Address: 332 Read St, Santa Fe, NM 87501
+   - A redeveloped area full of public art installations, local markets, and quirky shops.
 
 ---
 
-### Quick Tips:
-- **Getting Around:** Santa Fe is best explored by foot in its historic downtown, but have a car or use ride shares for places further afield.
-- **Best Time to Visit:** Late spring through early fall for mild weather and plentiful festivals.
-- **Local Delicacy:** Don’t miss out on trying the local New Mexican chile—red, green, or "Christmas" style (both red and green).
+## Quick Tips:
+- **Dress Accordingly**: Santa Fe's elevation means cooler temperatures, especially in the evenings.
+- **Plan Ahead**: Many restaurants have limited seating, making reservations advisable.
+- **Explore on Foot**: The city is pedestrian-friendly with many attractions within walking distance.
 
-Explore Santa Fe’s vibrant spaces and immerse yourself in its unique cultural tapestry. Whether you're sipping a cocktail, perusing an art gallery, or simply taking in the historic sights, there's something special waiting around every corner.
-```
+This guide is your ticket to discovering all that Santa Fe has to offer. Whether you're exploring cultural landmarks, indulging in local cuisines, or browsing unique shops, Santa Fe guarantees an unforgettable experience.

@@ -7,13 +7,6 @@ file_reader:
     You're a highly organized archivist with an eye for patterns. 
     You take scattered, messy collections of files and bring order to them, making sure each file is categorized and placed where it belongs. 
     Your satisfaction comes from transforming digital clutter into neatly structured libraries.
-  llm:
-  provider: ollama
-  config:
-    model: ollama/llama3.2
-    base_url: http://localhost:11434
-    temperature: 0.2
-    max_tokens: 800
 
 file_librarian:
   role: >
@@ -26,13 +19,6 @@ file_librarian:
     cataloging files by type, moving them into the correct folders, and maintaining 
     a system that makes retrieval effortless. To you, a well-structured digital 
     library is a work of art.
-  llm:
-  provider: ollama
-  config:
-    model: ollama/llama3.2:3b
-    base_url: http://localhost:11434
-    temperature: 0.2
-    max_tokens: 800
 
 mover:
   role: >
@@ -42,10 +28,3 @@ mover:
   backstory: >
     You're dedicated worker who moves a file from it's current home to it's proper location based on a recieved set of instructions.
     To you, a well-organized digital library is a work of art.
-  llm:
-  provider: ollama
-  config:
-    model: ollama/llama3.2:3b
-    base_url: http://localhost:11434
-    temperature: 0.2
-    max_tokens: 800

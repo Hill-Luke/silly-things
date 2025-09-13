@@ -1,0 +1,146 @@
+[
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/Bumper_SHRQ_04.mp3",
+    "category": "Audio",
+    "mime": "audio/mpeg",
+    "reason": "extension",
+    "confidence": 1,
+    "size_bytes": 102720,
+    "modified_at": "2025-07-28T14:11:07.200856"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/IMG_3898.JPG",
+    "category": "Images",
+    "mime": "image/jpeg",
+    "reason": "extension",
+    "confidence": 1,
+    "size_bytes": 3616676,
+    "modified_at": "2025-08-10T15:21:47"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/IMG_3899.JPG",
+    "category": "Images",
+    "mime": "image/jpeg",
+    "reason": "extension",
+    "confidence": 1,
+    "size_bytes": 4013310,
+    "modified_at": "2025-08-10T15:21:50"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/.DS_Store",
+    "category": "Unknown",
+    "mime": "unknown",
+    "reason": "unknown",
+    "confidence": 0,
+    "size_bytes": 8196,
+    "modified_at": "2025-08-20T13:20:33.465397"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/Bumper_SHRQ_02.mp3",
+    "category": "Audio",
+    "mime": "audio/mpeg",
+    "reason": "extension",
+    "confidence": 1,
+    "size_bytes": 102720,
+    "modified_at": "2025-07-28T14:11:07.216050"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/PTO Days 2025.ics",
+    "category": "Data",
+    "mime": "text/calendar",
+    "reason": "mime",
+    "confidence": 1,
+    "size_bytes": 3993,
+    "modified_at": "2025-08-07T14:17:41.433823"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/Bumper_SHRQ_01.mp3",
+    "category": "Audio",
+    "mime": "audio/mpeg",
+    "reason": "extension",
+    "confidence": 1,
+    "size_bytes": 102720,
+    "modified_at": "2025-07-28T14:11:07.234625"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/IMG_3900 2.JPG",
+    "category": "Images",
+    "mime": "image/jpeg",
+    "reason": "extension",
+    "confidence": 1,
+    "size_bytes": 4061694,
+    "modified_at": "2025-08-10T15:21:36"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/PTO Days 2025 Updated (1).ics",
+    "category": "Data",
+    "mime": "text/calendar",
+    "reason": "mime",
+    "confidence": 1,
+    "size_bytes": 4385,
+    "modified_at": "2025-08-07T14:23:41.787992"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/PTO Days 2025 Updated.ics",
+    "category": "Data",
+    "mime": "text/calendar",
+    "reason": "mime",
+    "confidence": 1,
+    "size_bytes": 4385,
+    "modified_at": "2025-08-07T14:22:48.547463"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/Shrq Its Random.mp3",
+    "category": "Audio",
+    "mime": "audio/mpeg",
+    "reason": "extension",
+    "confidence": 1,
+    "size_bytes": 195940,
+    "modified_at": "2025-08-03T14:28:57.589904"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/HDL Resume.docx",
+    "category": "Documents",
+    "mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "reason": "mime",
+    "confidence": 1,
+    "size_bytes": 33266,
+    "modified_at": "2025-08-14T16:26:03.681154"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/Shrq Warning Jingle.mp3",
+    "category": "Audio",
+    "mime": "audio/mpeg",
+    "reason": "extension",
+    "confidence": 1,
+    "size_bytes": 254245,
+    "modified_at": "2025-08-03T14:30:15.261376"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/Photo from Google Photos (3).jpg",
+    "category": "Images",
+    "mime": "image/jpeg",
+    "reason": "extension",
+    "confidence": 1,
+    "size_bytes": 3332217,
+    "modified_at": "2025-08-07T09:24:47.677638"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/Shrq Hard Drive.mp3",
+    "category": "Audio",
+    "mime": "audio/mpeg",
+    "reason": "extension",
+    "confidence": 1,
+    "size_bytes": 189043,
+    "modified_at": "2025-08-03T14:29:36.404848"
+  },
+  {
+    "path": "/Users/lukeofthehill/Desktop/test/Xvideos Video 406.mp4",
+    "category": "Video",
+    "mime": "video/mp4",
+    "reason": "extension",
+    "confidence": 1,
+    "size_bytes": 321345016,
+    "modified_at": "2025-08-13T18:34:21.081228"
+  }
+]

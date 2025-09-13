@@ -1,0 +1,107 @@
+{
+  "moves": [
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/Bumper_SHRQ_04.mp3",
+      "to": "/Users/lukeofthehill/Desktop/test/Audio/Bumper_SHRQ_04.mp3",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/IMG_3898.JPG",
+      "to": "/Users/lukeofthehill/Desktop/test/Images/IMG_3898.JPG",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/IMG_3899.JPG",
+      "to": "/Users/lukeofthehill/Desktop/test/Images/IMG_3899.JPG",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/.DS_Store",
+      "to": "/Users/lukeofthehill/Desktop/test/Unknown/.DS_Store",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/Bumper_SHRQ_02.mp3",
+      "to": "/Users/lukeofthehill/Desktop/test/Audio/Bumper_SHRQ_02.mp3",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/PTO Days 2025.ics",
+      "to": "/Users/lukeofthehill/Desktop/test/Data/PTO Days 2025.ics",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/Bumper_SHRQ_01.mp3",
+      "to": "/Users/lukeofthehill/Desktop/test/Audio/Bumper_SHRQ_01.mp3",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/IMG_3900 2.JPG",
+      "to": "/Users/lukeofthehill/Desktop/test/Images/IMG_3900 2.JPG",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/PTO Days 2025 Updated (1).ics",
+      "to": "/Users/lukeofthehill/Desktop/test/Data/PTO Days 2025 Updated (1).ics",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/PTO Days 2025 Updated.ics",
+      "to": "/Users/lukeofthehill/Desktop/test/Data/PTO Days 2025 Updated.ics",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/Shrq Its Random.mp3",
+      "to": "/Users/lukeofthehill/Desktop/test/Audio/Shrq Its Random.mp3",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/HDL Resume.docx",
+      "to": "/Users/lukeofthehill/Desktop/test/Documents/HDL Resume.docx",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/Shrq Warning Jingle.mp3",
+      "to": "/Users/lukeofthehill/Desktop/test/Audio/Shrq Warning Jingle.mp3",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/Photo from Google Photos (3).jpg",
+      "to": "/Users/lukeofthehill/Desktop/test/Images/Photo from Google Photos (3).jpg",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/Shrq Hard Drive.mp3",
+      "to": "/Users/lukeofthehill/Desktop/test/Audio/Shrq Hard Drive.mp3",
+      "status": "moved",
+      "reason": ""
+    },
+    {
+      "from": "/Users/lukeofthehill/Desktop/test/Xvideos Video 406.mp4",
+      "to": "/Users/lukeofthehill/Desktop/test/Video/Xvideos Video 406.mp4",
+      "status": "moved",
+      "reason": ""
+    }
+  ],
+  "summary": {
+    "planned": 15,
+    "moved": 15,
+    "skipped": 0,
+    "errors": 0
+  },
+  "log_path": "/Users/lukeofthehill/Desktop/test/move_log.txt"
+}

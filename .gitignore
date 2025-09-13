@@ -17,6 +17,8 @@ shrq_radio/output/
 shrq_radio/data/dj_responses/
 shrq_radio/data/music
 dj_response_map.json
+richter_radio/
+.ve
 
 # Ignore system files
 .DS_Store*.onnx

@@ -1,0 +1,28 @@
+[project]
+name = "music_tagger"
+version = "0.1.0"
+description = "music_tagger using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]>=0.157.0,<1.0.0",
+    "numpy==2.2.6",
+    "librosa==0.10.2.post1",
+    "numba<0.62",
+    "soundfile>=0.12.1",
+    "scipy>=1.10"
+]
+
+[project.scripts]
+music_tagger = "music_tagger.main:run"
+run_crew = "music_tagger.main:run"
+train = "music_tagger.main:train"
+replay = "music_tagger.main:replay"
+test = "music_tagger.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"

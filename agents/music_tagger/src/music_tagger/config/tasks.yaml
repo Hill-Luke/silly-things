@@ -1,0 +1,43 @@
+bpm_analysis_task:
+  description: >
+    Analyze the audio files in {filepaths} and extract the beats per minute (BPM) for each file.
+  expected_output: >
+    A JSON object with the file path and the numeric BPM.
+  agent: bpm_researcher
+
+bpm_categorization_task:
+  description: >
+    Take the BPM values from bpm_analysis_task and categorize them into slow (<80), medium (80–120), or fast (>120).
+  expected_output: >
+    A JSON object with the file path, the numeric BPM, and the speed category (slow, medium, fast).
+  agent: bpm_researcher
+
+loudness_analysis_task:
+  description: >
+    Analyze the audio files in {filepaths} and calculate their waveform intensity
+    using RMS loudness values and also measure integrated loudness in LUFS.
+    For each file, provide both RMS and LUFS values and categorize intensity (low/medium/high).
+  expected_output: >
+    A JSON object with the file path, the RMS loudness value, RMS intensity category,
+    and the LUFS loudness value.
+  agent: loudness_researcher
+
+energy_classification_task:
+  description: >
+    Combine the results from BPM analysis (speed category) and loudness analysis (intensity category)
+    to assign a final energy classification to each file in {filepaths}.
+    For loudness, categorize RMS loudness using the following thresholds: RMS < 0.02 = low, 0.02–0.08 = medium, RMS > 0.08 = high.
+    Also categorize LUFS loudness using: LUFS < -18 = low, -18 to -12 = medium, LUFS > -12 = high.
+    Iterate over each file path in the list.
+    The energy classification should combine the speed and intensity values into a single string (e.g., "fast+high", "medium+low").
+  expected_output: >
+    A JSON object with the file path, BPM value, speed category, RMS value, RMS category (low/medium/high),
+    LUFS value, LUFS category (low/medium/high), the final intensity category, and the final energy classification string.
+  agent: energy_curator
+
+playlist_classification_task:
+  description: >
+    Take in a list of filepaths and orchestrate the BPM, loudness, and final energy classification for each file.
+  expected_output: >
+    A JSON array with one object per file containing all results (file path, BPM, speed, RMS, LUFS, intensity, final energy classification).
+  agent: energy_curator

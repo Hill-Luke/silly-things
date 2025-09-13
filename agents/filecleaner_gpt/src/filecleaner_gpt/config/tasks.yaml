@@ -1,0 +1,46 @@
+file_type_logger:
+  description: >
+    Recursively scan all files within {folder}, excluding common system and VCS
+    directories (e.g., .git, node_modules, caches). For each file, determine
+    its type using extension→category mapping and MIME detection; when ambiguous,
+    choose the most likely category and mark "confidence".
+  expected_output: >
+    A JSON array where each item has:
+    { "path": "<absolute path>", "category": "<e.g., Documents|Audio|Video|Images|Archives|Code|Data|Configs|Temp|Unknown>",
+      "mime": "<detected mime>", "reason": "<extension|mime|heuristic>", "confidence": 0-1,
+      "size_bytes": <int>, "modified_at": "<ISO-8601>" }
+  agent: file_reader
+
+folder_structure:
+  description: >
+    Using the logged file list, propose and (if approved) create a canonical
+    folder structure inside {folder}. Use clear, predictable names such as:
+    Documents, Audio, Video, Images, Archives, Code, Data, Configs, Temp, Unknown.
+    Only create missing folders; do not alter unrelated existing folders.
+  expected_output: >
+    A JSON object with two keys:
+    { "proposed_folders": ["<folder paths>"], "created_folders": ["<actually created>"] }
+  agent: file_librarian
+
+file_mover:
+  description: >
+    Build a move plan mapping each file to its destination folder based on category.
+    On execution, move files atomically when possible, preserve timestamps/permissions, and skip
+    symlinks unless explicitly allowed. If a filename collision occurs, append a
+    numeric suffix (e.g., _2). Generate a move log with pre/post checksums.
+  expected_output: >
+    A JSON object:
+    { "moves": [{ "from": "<path>", "to": "<path>", "status": "planned|moved|skipped|error", "reason": "<if any>" }],
+      "summary": { "planned": <int>, "moved": <int>, "skipped": <int>, "errors": <int> },
+      "log_path": "<path to detailed log>" }
+  agent: file_librarian
+
+file_executor:
+  description: >
+    Execute the move plan produced by file_mover. For each planned move, 
+    perform the filesystem operation (atomic move if possible), preserve 
+    timestamps/permissions, and update the log with final statuses.
+  expected_output: >
+    A markdown object showing the updated statuses 
+    ("moved" vs "error"), plus a final execution summary.
+  agent: mover
