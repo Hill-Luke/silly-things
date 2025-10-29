@@ -21,6 +21,13 @@ from piper import PiperVoice, SynthesisConfig
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
+
+# Adding new packages for new TTS
+from pathlib import Path
+from openai import OpenAI
+import os
+from dotenv import load_dotenv
+load_dotenv()
 # ------------------------
 # FFMPEG Setup (Mac)
 # ------------------------
@@ -63,6 +70,8 @@ CANT_DEFUND = JINGLE_DIR / "shrq_cant_defund.mp3"
 WARNING = JINGLE_DIR / "shrq_warning.mp3"
 HARD_DRIVE = JINGLE_DIR / "shrq_hard_drive.mp3"
 ITS_RANDOM = JINGLE_DIR / "shrq_its_random.mp3"
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # jingles=[STRANGE_TASTE,DONT_COMPLAIN,CANT_DEFUND,WARNING,HARD_DRIVE,ITS_RANDOM,]
 
@@ -121,15 +130,17 @@ def download_mp3(url, save_path):
 # ------------------------
 
 
+
+# DEPRICATED
 # TTS Parameters
 
-syn_config=SynthesisConfig(
-    volume=1.2,             # Slight boost for presence in radio context
-    length_scale=1.05,      # Closer to natural speed, less robotic
-    noise_scale=0.667,      # Introduces some tonal variation (intonation)
-    noise_w_scale=0.8,      # Adds variation in pronunciation and rhythm
-    normalize_audio=True,   # Ensures consistent output loudness
-)
+# syn_config=SynthesisConfig(
+#     volume=1.2,             # Slight boost for presence in radio context
+#     length_scale=1.05,      # Closer to natural speed, less robotic
+#     noise_scale=0.667,      # Introduces some tonal variation (intonation)
+#     noise_w_scale=0.8,      # Adds variation in pronunciation and rhythm
+#     normalize_audio=True,   # Ensures consistent output loudness
+# )
 
 
 
@@ -137,29 +148,43 @@ async def synthesize_and_save(text, out_path):
     if not text.strip():
         raise ValueError("TTS input text is empty. Cannot synthesize.")
 
+    # speech_file_path = Path(__file__).parent / "speech.mp3"
+    
     print(f"[TTS] Synthesizing:\n{text}")
+
+    with client.audio.speech.with_streaming_response.create(
+        model="gpt-4o-mini-tts",
+        voice="coral",
+        input=text,
+        instructions="You are Jessica, the DJ of the local radio station S-H-R-Q. Speak in a grounded, even-keeled, smooth tone.",
+    ) as response:
+        response.stream_to_file(out_path)
+  
     print(f"[TTS] Saving to: {out_path}")
 
-    # Load the voice model once (outside this function if performance becomes an issue)
-    voice = PiperVoice.load(f"{TTS_DIR}/en_US-hfc_female-medium.onnx")
 
-    # Create a temporary WAV file to write the raw audio
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_wav:
-        wav_path = tmp_wav.name
-        with wave.open(wav_path, "wb") as wav_file:
-            voice.synthesize_wav(text, wav_file, syn_config=syn_config)
 
-    # Convert WAV to MP3 using ffmpeg
-    subprocess.run([
-        "ffmpeg", "-y",
-        "-i", wav_path,
-        "-codec:a", "libmp3lame",
-        "-qscale:a", "2",
-        str(out_path)
-    ], check=True)
+# DEPRICATED
+    # # Load the voice model once (outside this function if performance becomes an issue)
+    # voice = PiperVoice.load(f"{TTS_DIR}/en_US-hfc_female-medium.onnx")
 
-    # Clean up temporary WAV file
-    os.remove(wav_path)
+    # # Create a temporary WAV file to write the raw audio
+    # with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_wav:
+    #     wav_path = tmp_wav.name
+    #     with wave.open(wav_path, "wb") as wav_file:
+    #         voice.synthesize_wav(text, wav_file, syn_config=syn_config)
+
+    # # Convert WAV to MP3 using ffmpeg
+    # subprocess.run([
+    #     "ffmpeg", "-y",
+    #     "-i", wav_path,
+    #     "-codec:a", "libmp3lame",
+    #     "-qscale:a", "2",
+    #     str(out_path)
+    # ], check=True)
+
+    # # Clean up temporary WAV file
+    # os.remove(wav_path)
 
 # ------------------------
 # Extract MP3 metadata
@@ -231,8 +256,7 @@ async def main():
         else:
             md = extract_metadata(track)
             prompt = (
-                f"You are a radio DJ named Jessica for a station called S-H-R-Q. You have a playful and upbeat tone. Do not simulate sound effects or music. "
-                f"Say: 'Up next: here is {md['title']} by {md['artist']} from the album {md['album']}. You're listening to S-H-R-Q Radio!'"
+                f"You are an experienced radio scriptwriter creating a short on-air segment for a music program on the radio station S-H-R-Q. The host should sound like an NPR presenter — warm, thoughtful, but not overly serious. Write a brief spoken script for a single host who introduces and briefly comments on one song, keeping the tone natural and intelligent. Keep the comment to one sentence. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next: here is {md['title']} by {md['artist']} from the album {md['album']}. You're listening to S-H-R-Q Radio.'"
             )
 
         result = client.chat(model='llama3.2:1b', messages=[{"role": "user", "content": prompt}])
