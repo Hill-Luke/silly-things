@@ -46,22 +46,7 @@ AudioSegment.converter = str(ffmpeg_path)
 AudioSegment.ffprobe = str(ffprobe_path)
 
 nest_asyncio.apply()
-
-os.environ["SDL_AUDIODRIVER"] = "alsa"
 pygame.mixer.init()
-print("🎧 pygame using ALSA")
-
-# pygame.mixer.init()
-# try:
-#     # Try default (PulseAudio on desktop)
-#     pygame.mixer.init()
-# except pygame.error as e:
-#     print(f"⚠️ PulseAudio not available ({e}). Falling back to ALSA...")
-#     os.environ["SDL_AUDIODRIVER"] = "alsa"
-#     try:
-#         pygame.mixer.init()
-#     except pygame.error as e2:
-#         print(f"❌ Failed to initialize any audio backend ({e2}). Continuing without playback.")
 
 # ------------------------
 # Paths and Config
@@ -271,7 +256,7 @@ async def main():
         else:
             md = extract_metadata(track)
             prompt = (
-                f"You are Jessica, an experienced radio scriptwriter creating a short on-air segment for a music program on the radio station S-H-R-Q. The host should sound like an NPR presenter — warm, thoughtful, but not overly serious. Write a brief spoken script for a single host who introduces and briefly comments on one song, keeping the tone natural and intelligent. Keep the comment to one sentence. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next: here is {md['title']} by {md['artist']} from the album {md['album']}. You're listening to S-H-R-Q Radio.'"
+                f"You are an experienced radio scriptwriter creating a short on-air segment for a music program on the radio station S-H-R-Q. The host should sound like an NPR presenter — warm, thoughtful, but not overly serious. Write a brief spoken script for a single host who introduces and briefly comments on one song, keeping the tone natural and intelligent. Keep the comment to one sentence. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next: here is {md['title']} by {md['artist']} from the album {md['album']}. You're listening to S-H-R-Q Radio.'"
             )
 
         result = client.chat(model='llama3.2:1b', messages=[{"role": "user", "content": prompt}])
@@ -297,48 +282,41 @@ async def main():
     with open(BASE_DIR / "dj_response_map.json", "w") as f:
         json.dump(dj_response_map, f)
 
-    # Stitch final mix
+    # ------------------------
+    # Stitch final mix with volume normalization
+    # ------------------------
+    def normalize_volume(segment, target_dBFS=-14.0):
+        """Normalize audio segment to target dBFS."""
+        change_in_dBFS = target_dBFS - segment.dBFS
+        return segment.apply_gain(change_in_dBFS)
+
     final_mix = AudioSegment.silent(duration=0)
+
     for track in playlist:
         key = track.name
+
+        # Add DJ response first (if exists)
         if key in response_paths and response_paths[key].exists():
-            final_mix += AudioSegment.from_file(response_paths[key]) + AudioSegment.silent(duration=500)
-        final_mix += AudioSegment.from_file(track) + AudioSegment.silent(duration=1000)
+            dj_clip = AudioSegment.from_file(response_paths[key])
+            dj_clip = normalize_volume(dj_clip, target_dBFS=-14.0)  # boost TTS
+            final_mix += dj_clip + AudioSegment.silent(duration=500)
 
+        # Then the actual track
+        song = AudioSegment.from_file(track)
+        # Slightly reduce music volume for better balance with voice
+        song = normalize_volume(song, target_dBFS=-16.0)
+        final_mix += song + AudioSegment.silent(duration=1000)
+
+    # Add sign-off
     if signoff_path.exists():
-        final_mix += AudioSegment.from_file(signoff_path)
+        signoff_clip = AudioSegment.from_file(signoff_path)
+        signoff_clip = normalize_volume(signoff_clip, target_dBFS=-14.0)
+        final_mix += signoff_clip
 
+    # Export final broadcast
     out_path = OUTPUT_DIR / f"shrq_radio_broadcast.mp3"
     final_mix.export(out_path, format="mp3")
     print(f"\n✅ Broadcast saved to: {out_path}")
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except Exception as e:
-        print(f"❌ Error in main: {e}")
-    finally:
-        # --- Clean shutdown logic ---
-        try:
-            print("🧹 Cleaning up resources...")
-            pygame.mixer.quit()
-        except Exception as e:
-            print(f"⚠️ Error shutting down pygame: {e}")
-
-        # Ensure any ffmpeg or background audio processes terminate
-        try:
-            subprocess.run(["pkill", "-f", "ffmpeg"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        except Exception:
-            pass
-
-        # Ensure asyncio event loop is closed (handles Ollama/edge-tts threads)
-        try:
-            loop = asyncio.get_event_loop()
-            if not loop.is_closed():
-                loop.stop()
-                loop.close()
-        except Exception:
-            pass
-
-        print("✅ SHRQ broadcast completed and exited cleanly.")
-        sys.exit(0)
+    asyncio.run(main())
