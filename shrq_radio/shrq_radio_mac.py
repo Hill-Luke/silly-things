@@ -46,7 +46,22 @@ AudioSegment.converter = str(ffmpeg_path)
 AudioSegment.ffprobe = str(ffprobe_path)
 
 nest_asyncio.apply()
+
+os.environ["SDL_AUDIODRIVER"] = "alsa"
 pygame.mixer.init()
+print("🎧 pygame using ALSA")
+
+# pygame.mixer.init()
+# try:
+#     # Try default (PulseAudio on desktop)
+#     pygame.mixer.init()
+# except pygame.error as e:
+#     print(f"⚠️ PulseAudio not available ({e}). Falling back to ALSA...")
+#     os.environ["SDL_AUDIODRIVER"] = "alsa"
+#     try:
+#         pygame.mixer.init()
+#     except pygame.error as e2:
+#         print(f"❌ Failed to initialize any audio backend ({e2}). Continuing without playback.")
 
 # ------------------------
 # Paths and Config
@@ -298,4 +313,32 @@ async def main():
     print(f"\n✅ Broadcast saved to: {out_path}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        print(f"❌ Error in main: {e}")
+    finally:
+        # --- Clean shutdown logic ---
+        try:
+            print("🧹 Cleaning up resources...")
+            pygame.mixer.quit()
+        except Exception as e:
+            print(f"⚠️ Error shutting down pygame: {e}")
+
+        # Ensure any ffmpeg or background audio processes terminate
+        try:
+            subprocess.run(["pkill", "-f", "ffmpeg"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+
+        # Ensure asyncio event loop is closed (handles Ollama/edge-tts threads)
+        try:
+            loop = asyncio.get_event_loop()
+            if not loop.is_closed():
+                loop.stop()
+                loop.close()
+        except Exception:
+            pass
+
+        print("✅ SHRQ broadcast completed and exited cleanly.")
+        sys.exit(0)
