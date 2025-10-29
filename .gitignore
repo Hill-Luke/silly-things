@@ -6,7 +6,7 @@ __pycache__/
 # Ignore virtual environments
 venv/
 .env/
-
+*.env
 # Ignore audio output and logs
 *.wav
 *.mp3
