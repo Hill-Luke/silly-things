@@ -30,9 +30,17 @@ pip install -r requirements.txt
 4. **Install Ollama**
     - Download and install `ollama` from the [website](https://ollama.com/)
     - Once installed, pull `llama3.2:1b` for generating the DJ's script. You can pull whatever model you'd like to use, dependent on your hardware. I run this on a raspberry pi, so this smaller model works well and doesn't fry my cpu!
-5. **FOR MAC/LINUX USERS: Download the Piper TTS voice**
-  - Save it to the `TTS_tests` folder using `python3 -m piper.download_voices en_US-hfc_female-medium`
-5. **Store your MP3 music files in:** `shrq_radio/data/music/`
+    - 
+5. **Choose your TTS!**
+  Option A. **OpenAI's Cora**: I set this as the default because OpenAI's cora is a much more natural sounding TTS algorithm.
+  - Create a `.env` file within the `shrq_radio` folder.
+  - Add your OpenAI API key to the `.env`
+
+  Option B. **Piper TTS**: a free to use Text-to-Speech Algorithm. Piper is free to download and use.
+  - First, comment out all of the OpenAI API code and un-comment the Piper TTS code. 
+  - Download and save `en_US-hfc_female-medium` voice to the `TTS_tests` folder using `python3 -m piper.download_voices en_US-hfc_female-medium`
+
+6. **Store your MP3 music files in:** `shrq_radio/data/music/`
 
 ## Run
 ```bash
