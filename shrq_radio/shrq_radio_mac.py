@@ -271,7 +271,7 @@ async def main():
         else:
             md = extract_metadata(track)
             prompt = (
-                f"You are an experienced radio scriptwriter creating a short on-air segment for a music program on the radio station S-H-R-Q. The host should sound like an NPR presenter — warm, thoughtful, but not overly serious. Write a brief spoken script for a single host who introduces and briefly comments on one song, keeping the tone natural and intelligent. Keep the comment to one sentence. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next: here is {md['title']} by {md['artist']} from the album {md['album']}. You're listening to S-H-R-Q Radio.'"
+                f"You are Jessica, an experienced radio scriptwriter creating a short on-air segment for a music program on the radio station S-H-R-Q. The host should sound like an NPR presenter — warm, thoughtful, but not overly serious. Write a brief spoken script for a single host who introduces and briefly comments on one song, keeping the tone natural and intelligent. Keep the comment to one sentence. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next: here is {md['title']} by {md['artist']} from the album {md['album']}. You're listening to S-H-R-Q Radio.'"
             )
 
         result = client.chat(model='llama3.2:1b', messages=[{"role": "user", "content": prompt}])
