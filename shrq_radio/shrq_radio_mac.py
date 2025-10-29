@@ -246,9 +246,9 @@ async def main():
 
     for i, track in enumerate(playlist):
         if track == npr_path:
-            prompt = "Say: 'Up next, some national news from NPR'"
+            prompt = "You are an experienced radio scriptwriter creating a short on-air segment for a news program on the radio station S-H-R-Q. The host should sound like an NPR presenter — warm, thoughtful, but not overly serious. Write a brief spoken script for a single host who introduces and briefly comments on one song, keeping the tone natural and intelligent. Keep the comment to one sentence. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next, some national news from NPR'"
         elif track == tpr_path:
-            prompt = "Say: 'Up next, some local news from Texas Public Radio'"
+            prompt = "You are an experienced radio scriptwriter creating a short on-air segment for a news program on the radio station S-H-R-Q. The host should sound like an NPR presenter — warm, thoughtful, but not overly serious. Write a brief spoken script for a single host who introduces and briefly comments on one song, keeping the tone natural and intelligent. Keep the comment to one sentence. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next, some local news from Texas Public Radio'"
         elif track in jingles:
             continue
         elif random.random() < 0.5:
