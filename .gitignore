@@ -19,6 +19,10 @@ filepaths.txt
 
 *.log
 *.onnx
+*.flac
+*.m4a
+filepaths.txt
+*.csv
 timestamp.log
 shrq_radio/output/*
 shrq_radio/data/dj_responses/*
