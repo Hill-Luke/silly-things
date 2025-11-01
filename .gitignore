@@ -10,6 +10,11 @@ venv/
 # Ignore audio output and logs
 *.wav
 *.mp3
+*.m4a
+*.flac
+*.csv
+filepaths.txt
+
 *.log
 *.onnx
 timestamp.log

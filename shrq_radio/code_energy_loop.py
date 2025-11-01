@@ -15,7 +15,7 @@ with open(file_list_path, "r") as f:
 #     quoted_path = f'"{path}"'
 #     formatted_paths.append(quoted_path)
 
-
+ 
 print("Analyzing BPM")
 for fp in filepaths:
 

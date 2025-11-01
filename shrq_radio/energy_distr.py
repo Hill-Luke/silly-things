@@ -7,7 +7,7 @@ import soundfile as sf
 import os
 import sys
 from tqdm import tqdm
-
+ 
 def analyze_audio(filepath):
     """Analyze a single MP3 and return BPM, RMS, and LUFS."""
     try:

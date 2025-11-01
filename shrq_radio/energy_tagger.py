@@ -6,7 +6,7 @@ from mutagen.mp3 import MP3
 import soundfile as sf
 import sys
 import os
-
+ 
 def classify_tempo(bpm):
     if bpm < 90:
         return "low"
