@@ -1,4 +1,4 @@
-import datetime
+# import datetime
 import random
 import os
 import json
@@ -6,9 +6,11 @@ import re
 import requests
 import asyncio
 from pathlib import Path
+from datetime import datetime, time
 from pydub.utils import which
-from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
+from mutagen.id3 import ID3
+from mutagen.easyid3 import EasyID3
 import edge_tts
 import pygame
 import nest_asyncio
@@ -189,23 +191,46 @@ async def synthesize_and_save(text, out_path):
 # ------------------------
 # Extract MP3 metadata
 # ------------------------
-def extract_metadata(file_path):
+def read_energy_tag(mp3_path):
+    """Reads the custom 'energy' tag from an MP3 file."""
     try:
-        audio = MP3(file_path, ID3=EasyID3)
-        return {
-            "title": audio.get("title", ["Unknown"])[0],
-            "artist": audio.get("artist", ["Unknown"])[0],
-            "album": audio.get("album", ["Unknown"])[0],
-        }
-    except:
-        return {"title": "Unknown", "artist": "Unknown", "album": "Unknown"}
+        audio = ID3(mp3_path)
+        for key, frame in audio.items():
+            if key.startswith("TXXX:energy"):
+                return frame.text[0]
+    except ID3NoHeaderError:
+        return None
+    return None
+
+def extract_metadata(file_path):
+    """Extracts title, artist, album, and energy metadata from an MP3 file."""
+    file = {
+        "title": "Unknown",
+        "artist": "Unknown",
+        "album": "Unknown",
+        "energy": "Unknown"
+    }
+
+    try:
+        audio = EasyID3(file_path)
+        file["title"] = audio.get("title", ["Unknown"])[0]
+        file["artist"] = audio.get("artist", ["Unknown"])[0]
+        file["album"] = audio.get("album", ["Unknown"])[0]
+    except Exception:
+        pass  # Not all files will have EasyID3 tags
+
+    energy = read_energy_tag(file_path)
+    if energy:
+        file["energy"] = energy
+
+    return file
 
 # ------------------------
 # Main function
 # ------------------------
 async def main():
     ensure_folder_structure(BASE_DIR)
-    timestamp = datetime.datetime.now().strftime("%Y_%m_%d")
+    timestamp = datetime.now().strftime("%Y_%m_%d")
     with open("timestamp.log", "w") as f:
         f.write(timestamp)
     print(f"Current date and time saved to timestamp.log: {timestamp}")
@@ -219,14 +244,45 @@ async def main():
     tpr_url = get_latest_tpr_url()
     download_mp3(tpr_url, tpr_path)
 
+     
+
+
     # Random playlist
     music_files = list(MUSIC_DIR.glob("*.mp3"))
     if len(music_files) < 10:
         print("❌ Not enough songs in the music folder. Please add more.")
         return
+    
+    # Read the energy of the files, and be selective based on the time
 
 
-    songs = random.sample(music_files, 30)
+    # Read the energy of the files, and be selective based on the time
+    energies = {}
+    for sg in music_files:
+        energy_value = read_energy_tag(sg)
+        if energy_value:
+            energies[sg] = energy_value
+
+    # Get the current time (not timestamp string)
+    current_time = datetime.now().time()
+
+    # Morning selection: before 9am
+    if current_time <= time(9, 0, 0):
+        filtered = [sg for sg, e in energies.items() if e in ['low-low', 'low-medium', 'medium_low']]
+    # Daytime selection: 9am–6pm
+    elif time(9, 0, 0) < current_time < time(18, 0, 0):
+        filtered = list(energies.keys())
+    # Evening selection: after 6pm
+    else:
+        filtered = [sg for sg, e in energies.items() if e in ['low-medium', 'medium-medium', 'medium_low']]
+
+    # Pick up to 30 random songs (if enough)
+    songs = random.sample(filtered, min(10, len(filtered)))
+
+    print(f"🎵 Selected {len(songs)} songs based on time {current_time}")
+    
+    
+    # songs = random.sample(music_files, 30)
     news_clip = random.choice([npr_path, tpr_path])
     
     playlist = songs + [news_clip] + jingles
@@ -249,6 +305,8 @@ async def main():
             prompt = "You are an experienced radio scriptwriter creating a short on-air segment for a news program on the radio station S-H-R-Q. The host should sound like an NPR presenter — warm, trustworthy, but not overly serious. Write a brief spoken script for a single host who introduces the hourly news broadcast, keeping the tone natural and intelligent. Keep the script to one sentence. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next, some national news from NPR'"
         elif track == tpr_path:
             prompt = "You are an experienced radio scriptwriter creating a short on-air segment for a news program on the radio station S-H-R-Q. The host should sound like an NPR presenter — warm, trustworthy, but not overly serious. Write a brief spoken script for a single host who introduces the hourly news broadcast, keeping the tone natural and intelligent. Keep the script to one sentence. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next, some local news from Texas Public Radio'"
+        elif track==SHRQ_THEME: # We don't want an unknown introduction
+            continue
         elif track in jingles:
             continue
         elif random.random() < 0.5:
