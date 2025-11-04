@@ -13,6 +13,8 @@ venv/
 *.m4a
 *.flac
 *.csv
+*.json
+*.DS_Store
 filepaths.txt
 
 *.log
