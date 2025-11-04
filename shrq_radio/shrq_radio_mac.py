@@ -277,7 +277,7 @@ async def main():
         filtered = [sg for sg, e in energies.items() if e in ['low-medium', 'medium-medium', 'medium_low']]
 
     # Pick up to 30 random songs (if enough)
-    songs = random.sample(filtered, min(10, len(filtered)))
+    songs = random.sample(filtered, min(30, len(filtered)))
 
     print(f"🎵 Selected {len(songs)} songs based on time {current_time}")
     
