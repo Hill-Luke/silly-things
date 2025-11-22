@@ -1,0 +1,29 @@
+[project]
+name = "dj"
+version = "0.1.0"
+description = "dj using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]>=0.157.0,<1.0.0",
+    "duckduckgo-search>=8.1.1",
+    "librosa>=0.11.0",
+    "mutagen>=1.47.0",
+    "numpy>=2.2.6",
+    "pyloudnorm>=0.1.1",
+    "soundfile>=0.13.1",
+]
+
+[project.scripts]
+dj = "dj.main:run"
+run_crew = "dj.main:run"
+train = "dj.main:train"
+replay = "dj.main:replay"
+test = "dj.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"

@@ -1,0 +1,49 @@
+read_files:
+  description: >
+    Read through all of the files in a given filepath {folder}
+  expected_output: >
+    a json object with the name of the file, and filepath.
+  agent: music_researcher
+
+research_song:
+  description: >
+    search the web for information about a given song and artist
+  expected_output: >
+    A json object that includes the mp3 filepath, the artist, the genre, and a summary of the themes in the lyrics.
+  agent: music_researcher
+
+read_tempo:
+  description: >
+    For each audio file in the provided folder, use the BPM Tool to detect
+    its tempo (BPM). Return a JSON array where each item contains the song
+    filepath and the detected tempo value.
+  expected_output: >
+    A JSON string like:
+    {
+      "songs": [
+        { "filepath": "/path/to/song1.mp3", "tempo": 123.4 },
+        { "filepath": "/path/to/song2.mp3", "tempo": 98.7 }
+      ]
+    }
+  agent: music_researcher
+
+read_energy:
+  description: >
+    Read the energy tag on the MP3 file
+  expected_output: >
+    a json object that includes the song name and the energy listed in the file's tags
+  agent: music_researcher
+
+read_theme:
+  description: >
+    read the summary major themes of the lyrics in the song.
+  expected output: >
+    a json object that returns the song name, the mp3 link, and the themes of the lyrics
+  agent: music_researcher
+
+create_playlist:
+  description: Create a playlist based on the research and energy data.
+  expected_output: >
+    A concise markdown playlist listing each selected track with its full file path
+    and a short note on why it fits the vibe based on the research and energy tags.
+  agent: radio_dj
