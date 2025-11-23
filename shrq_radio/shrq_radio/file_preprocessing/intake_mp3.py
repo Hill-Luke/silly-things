@@ -21,7 +21,7 @@ import soundfile as sf
 import os
 
 import check_tags
-import picard_clean
+import shrq_radio.shrq_radio.file_preprocessing.picard_clean as picard_clean
 import energy_tagger
 from tqdm import tqdm
 

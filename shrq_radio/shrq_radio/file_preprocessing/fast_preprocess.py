@@ -18,7 +18,7 @@ import musicbrainzngs as mb
 from tqdm import tqdm
 
 import check_tags
-import picard_clean
+import shrq_radio.shrq_radio.file_preprocessing.picard_clean as picard_clean
 import energy_tagger
 
 
