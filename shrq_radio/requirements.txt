@@ -11,3 +11,8 @@ openai
 dotenv
 lxml
 beautifulsoup4
+musicbrainzngs
+librosa
+numpy
+pyloudnorm
+soundfile
