@@ -9,6 +9,8 @@ from mutagen.mp3 import MP3
 import soundfile as sf
 import sys
 import os
+import traceback
+import pyloudnorm as pyln
  
 
 class energy_tool_input(BaseModel):
@@ -108,6 +110,42 @@ class folder_file_extractor(BaseTool):
 
         return json.dumps(files_dict, ensure_ascii=False)
     
+
+#-------- File Tagger --------#
+class FileTaggerToolInput(BaseModel):
+    """Input schema for FileTaggerTool."""
+    filepath: str = Field(..., description="Path to the mp3 file to update.")
+    energy_classification: str = Field(..., description="Energy classification string to embed in the mp3 metadata.")
+
+class FileTaggerTool(BaseTool):
+    name: str = "File Tagger Tool"
+    description: str = "Writes the computed energy classification into the metadata of an MP3 file."
+    args_schema: Type[BaseModel] = FileTaggerToolInput
+
+    def _run(self, filepath: str, energy_classification: str) -> str:
+        try:
+            # Load or initialize ID3 tags
+            try:
+                tags = ID3(filepath)
+            except ID3NoHeaderError:
+                tags = ID3()
+
+            # Add/update a custom TXXX frame for energy classification
+            tags.add(
+                TXXX(
+                    encoding=3,  # UTF-8
+                    desc="EnergyClassification",
+                    text=energy_classification
+                )
+            )
+
+            # Save back to file
+            tags.save(filepath)
+
+            return f"Updated {filepath} with EnergyClassification={energy_classification}"
+        except Exception as e:
+            tb = traceback.format_exc()
+            return f"Error tagging {filepath}: {repr(e)}\nTraceback:\n{tb}"    
 
 class DuckDuckGoInput(BaseModel):
     """Input schema for DuckDuckGoTool."""
