@@ -2,7 +2,7 @@ import sys
 import traceback
 import os
 from pathlib import Path
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, TimeoutError as FuturesTimeoutError
 
 from mutagen.id3 import (
     ID3,
@@ -28,6 +28,9 @@ mb.set_useragent(
     "1.0",
     "https://example.com/contact"  # optional
 )
+
+# Timeout (in seconds) for processing a single file
+TIMEOUT_SECONDS = 60
 
 
 def frame_text(frame):
@@ -234,16 +237,23 @@ def main():
     # Use all available CPU cores by default
     max_workers = os.cpu_count() or 4
 
-    # Run in parallel
+    file_strs = [str(p) for p in files]
+
+    # Run in parallel with per-file timeout
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        # Convert paths to strings once, then map directly to the worker function
-        file_strs = [str(p) for p in files]
-        list(tqdm(
-            executor.map(pre_process_mp3, file_strs),
+        futures = [executor.submit(pre_process_mp3, s) for s in file_strs]
+
+        for path, fut in tqdm(
+            list(zip(file_strs, futures)),
             total=len(file_strs),
             desc="Processing MP3s",
-        ))
-
+        ):
+            try:
+                fut.result(timeout=TIMEOUT_SECONDS)
+            except FuturesTimeoutError:
+                print(f"⏱️ Timeout while processing {path}, skipping.")
+            except Exception as e:
+                print(f"⚠️ Error while processing {path}: {repr(e)}")
 
 if __name__ == "__main__":
     # On macOS/Windows, this guard is required for multiprocessing
