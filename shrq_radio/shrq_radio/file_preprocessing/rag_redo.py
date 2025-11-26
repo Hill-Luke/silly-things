@@ -2,6 +2,7 @@ import argparse
 import json
 import math
 import os
+import re
 from pathlib import Path
 
 import requests
@@ -9,10 +10,20 @@ from mutagen.easyid3 import EasyID3
 from tqdm import tqdm
 
 OLLAMA_URL = "http://localhost:11434"
-LLM_MODEL = "llama3.2:1b"   # model used for both embeddings + answering
+
+# Model used when BUILDING the DB (for embeddings).
+# The actual model name will be stored in the DB as db["model"].
+LLM_MODEL = "llama3.2:1b"
+
+# Basic stopwords so lexical filter doesn't match every doc on generic words
+STOPWORDS = {
+    "what", "album", "song", "songs", "year", "from", "the", "and", "with",
+    "this", "that", "track", "tracks", "is", "by", "for", "about", "show",
+    "me", "high", "energy", "high-energy"
+}
 
 
-# ---------------------- Embeddings & Chat ---------------------- #
+# ---------------------- Embeddings & Generation ---------------------- #
 
 def get_embedding(text: str, model: str = LLM_MODEL):
     """Get an embedding vector from Ollama for a given text."""
@@ -26,9 +37,15 @@ def get_embedding(text: str, model: str = LLM_MODEL):
     return data["embedding"]   # list[float]
 
 
-def ask_llama(query: str, context_chunks, model: str = LLM_MODEL) -> str:
-    """Call Ollama chat endpoint with RAG context."""
+def generate_with_context(query: str, docs, model: str) -> str:
+    """
+    Call Ollama's /api/generate endpoint with RAG context.
+
+    `docs` is a list of document dicts from the DB.
+    """
+    context_chunks = [d["text"] for d in docs]
     context_text = "\n\n".join(context_chunks)
+
     system_prompt = (
         "You are an assistant that helps the user explore a music library.\n"
         "You are given context about MP3 tags (title, artist, album, genre, BPM, loudness, etc.).\n"
@@ -36,25 +53,23 @@ def ask_llama(query: str, context_chunks, model: str = LLM_MODEL) -> str:
         "in the context, say you don't see it."
     )
 
+    full_prompt = (
+        f"{system_prompt}\n\n"
+        f"Context about MP3 files:\n{context_text}\n\n"
+        f"Question: {query}"
+    )
+
     payload = {
         "model": model,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {
-                "role": "user",
-                "content": (
-                    f"Context about MP3 files:\n{context_text}\n\n"
-                    f"Question: {query}"
-                ),
-            },
-        ],
+        "prompt": full_prompt,
         "stream": False,
     }
 
-    resp = requests.post(f"{OLLAMA_URL}/api/chat", json=payload, timeout=120)
+    resp = requests.post(f"{OLLAMA_URL}/api/generate", json=payload, timeout=120)
     resp.raise_for_status()
     data = resp.json()
-    return data["message"]["content"]
+    # /api/generate returns {"response": "...", ...}
+    return data.get("response", "")
 
 
 # ---------------------- Tag Extraction ---------------------- #
@@ -159,6 +174,33 @@ def cosine_similarity(a, b) -> float:
     return dot / norm_a / norm_b
 
 
+def lexical_prefilter(docs, query: str):
+    """
+    Lexical filter to narrow down candidates *before* doing embedding similarity.
+
+    - Tokenize the query.
+    - Drop short tokens and stopwords.
+    - Keep docs whose text contains any of the remaining tokens (case-insensitive).
+    - Fallback to ALL docs if nothing matches.
+    """
+    tokens = [
+        t.lower()
+        for t in re.findall(r"[A-Za-z0-9']+", query)
+        if len(t) > 2 and t.lower() not in STOPWORDS
+    ]
+
+    if not tokens:
+        return docs
+
+    filtered = []
+    for d in docs:
+        text = d.get("text", "").lower()
+        if any(tok in text for tok in tokens):
+            filtered.append(d)
+
+    return filtered or docs
+
+
 # ---------------------- Build / Query RAG DB ---------------------- #
 
 def build_db(music_dir: Path, db_path: Path):
@@ -178,7 +220,9 @@ def build_db(music_dir: Path, db_path: Path):
 
         text, bpm_val, loudness_val = build_doc_from_tags(mp3_path, tags)
         try:
-            embedding = get_embedding(text)
+            # Use LLM_MODEL for embeddings when building;
+            # this model name will be saved into the DB.
+            embedding = get_embedding(text, model=LLM_MODEL)
         except Exception as e:
             print(f"Failed to embed {mp3_path}: {e}")
             continue
@@ -196,6 +240,7 @@ def build_db(music_dir: Path, db_path: Path):
         )
 
     db = {
+        # Store the embedding model used so queries can re-use it.
         "model": LLM_MODEL,
         "documents": docs,
     }
@@ -207,7 +252,7 @@ def build_db(music_dir: Path, db_path: Path):
     print(f"Saved RAG DB with {len(docs)} documents to {db_path}")
 
 
-def query_db(db_path: Path, query: str, top_k: int = 5):
+def query_db(db_path: Path, query: str, top_k: int = 5, chat_model: str | None = None):
     """Load DB, embed query, retrieve top_k docs, and ask LLM."""
     if not db_path.exists():
         print(f"DB not found: {db_path}")
@@ -221,28 +266,40 @@ def query_db(db_path: Path, query: str, top_k: int = 5):
         print("No documents in DB.")
         return
 
-    query_emb = get_embedding(query)
+    # Embedding model used when building the DB
+    emb_model = db.get("model", LLM_MODEL)
 
-    # Rank documents
+    # By default, answer with the same model; can be overridden if desired.
+    if chat_model is None:
+        chat_model = emb_model
+
+    # Lexical prefilter to narrow candidate docs
+    candidates = lexical_prefilter(docs, query)
+
+    # Embed the query using the SAME model as stored in the DB
+    query_emb = get_embedding(query, model=emb_model)
+
+    # Rank candidate documents
     scored = []
-    for doc in docs:
+    for doc in candidates:
         sim = cosine_similarity(query_emb, doc["embedding"])
         scored.append((sim, doc))
 
     scored.sort(key=lambda x: x[0], reverse=True)
-    top_docs = scored[:top_k]
+    top_docs = [doc for sim, doc in scored[:top_k]]
 
-    context_chunks = []
-    for sim, doc in top_docs:
-        context_chunks.append(f"(score={sim:.3f})\n{doc['text']}")
+    # Ask LLM with RAG context
+    answer = generate_with_context(query, top_docs, model=chat_model)
 
-    answer = ask_llama(query, context_chunks)
     print("\n=== Answer ===\n")
     print(answer)
+
     print("\n=== Top matches ===\n")
-    for sim, doc in top_docs:
-        print(f"{sim:.3f} :: {doc['path']}  "
-              f"(BPM={doc.get('bpm')}, Loudness={doc.get('loudness')})")
+    for sim, doc in scored[:top_k]:
+        print(
+            f"{sim:.3f} :: {doc['path']}  "
+            f"(BPM={doc.get('bpm')}, Loudness={doc.get('loudness')})"
+        )
 
 
 # ---------------------- CLI ---------------------- #
@@ -266,6 +323,12 @@ def main():
     # query
     p_query = subparsers.add_parser("query", help="Query the RAG DB")
     p_query.add_argument("--db", type=str, default="mp3_rag_db.json", help="DB path")
+    p_query.add_argument(
+        "--model",
+        type=str,
+        default=None,
+        help="Ollama model to use for answering (default: same as DB embedding model)",
+    )
     p_query.add_argument("question", type=str, help="Natural language question")
 
     args = parser.parse_args()
@@ -276,15 +339,15 @@ def main():
         build_db(music_dir, db_path)
     elif args.command == "query":
         db_path = Path(args.db).expanduser()
-        query_db(db_path, args.question)
+        query_db(db_path, args.question, chat_model=args.model)
 
 
 if __name__ == "__main__":
     main()
 
-# # 2. Build the DB from your music folder
-# python mp3_rag.py build "/Users/lukeofthehill/repos/silly-things/shrq_radio/shrq_radio/data/music" --db mp3_rag_db.json
-
-# # 3. Ask questions about your library
+# Example usage:
+# 1) Build the DB from your music folder
+# python mp3_rag.py build "C:/path/to/music" --db mp3_rag_db.json
+#
+# 2) Ask questions about your library
 # python mp3_rag.py query --db mp3_rag_db.json "Show me high-energy rock tracks from the 1970s"
-
