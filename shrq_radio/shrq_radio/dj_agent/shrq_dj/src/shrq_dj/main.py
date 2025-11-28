@@ -22,17 +22,33 @@ def run():
     # if len(sys.argv) < 2:
     #     raise ValueError("Please provide the path to the JSON db file as the first argument, e.g. `python main.py mp3_rag_db.json`.")
 
-    db_path = "/Users/lukeofthehill/repos/silly-things/shrq_radio/shrq_radio/file_preprocessing/mp3_rag_db.json"
+    db_path = "/Users/lukeofthehill/repos/silly-things/shrq_radio/shrq_radio/dj_agent/shrq_dj/mp3_dataset.json"
 
     # Load JSON and convert to a pandas DataFrame
     with open(db_path, "r") as f:
         raw_db = json.load(f)
+    
+    rename_map = {
+    'TIT2': "Trackname",
+    'TPE1': "Artist",
+    'TALB': "Album",
+    'TDRC': "Year",
+    'TCON': "Genre",
+    "TXXX:energy": "energy"
+    }
+
+# Rename keys inside every dict in the list
+    raw_db = [
+        {rename_map.get(k, k): v for k, v in item.items()}
+        for item in raw_db
+    ]
 
     # Ensure we have a records-oriented structure; assume the JSON is already a list of dicts
     if isinstance(raw_db, list):
         db_records = raw_db
     else:
         db_records = [raw_db]
+
 
     user_query = input("What should the playlist consist of? ")
 
@@ -53,10 +69,24 @@ def train():
     """
     Train the crew for a given number of iterations.
     """
-    db_path = "/Users/lukeofthehill/repos/silly-things/shrq_radio/shrq_radio/file_preprocessing/mp3_rag_db.json"
+    db_path = "/Users/lukeofthehill/repos/silly-things/shrq_radio/shrq_radio/dj_agent/shrq_dj/mp3_dataset.json"
 
     with open(db_path, "r") as f:
         raw_db = json.load(f)
+    rename_map = {
+    'TIT2': "Trackname",
+    'TPE1': "Artist",
+    'TALB': "Album",
+    'TDRC': "Year",
+    'TCON': "Genre",
+    "TXXX:energy": "energy"
+    }
+
+# Rename keys inside every dict in the list
+    raw_db = [
+        {rename_map.get(k, k): v for k, v in item.items()}
+        for item in raw_db
+    ]
 
     if isinstance(raw_db, list):
         db_records = raw_db
@@ -90,10 +120,24 @@ def test():
     """
     Test the crew execution and returns the results.
     """
-    db_path = "/Users/lukeofthehill/repos/silly-things/shrq_radio/shrq_radio/file_preprocessing/mp3_rag_db.json"
+    db_path = "/Users/lukeofthehill/repos/silly-things/shrq_radio/shrq_radio/dj_agent/shrq_dj/mp3_dataset.json"
 
     with open(db_path, "r") as f:
         raw_db = json.load(f)
+    rename_map = {
+    'TIT2': "Trackname",
+    'TPE1': "Artist",
+    'TALB': "Album",
+    'TDRC': "Year",
+    'TCON': "Genre",
+    "TXXX:energy": "energy"
+    }
+
+# Rename keys inside every dict in the list
+    raw_db = [
+        {rename_map.get(k, k): v for k, v in item.items()}
+        for item in raw_db
+    ]
 
     if isinstance(raw_db, list):
         db_records = raw_db
