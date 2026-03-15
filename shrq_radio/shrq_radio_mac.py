@@ -133,7 +133,7 @@ def download_mp3(url, save_path):
 
 
 
-# DEPRICATED
+# DEPRICATED -- Retaining if you don't want to use OpenAI for TTS
 # TTS Parameters
 
 # syn_config=SynthesisConfig(
@@ -277,12 +277,10 @@ async def main():
         filtered = [sg for sg, e in energies.items() if e in ['low-medium', 'medium-medium', 'medium_low']]
 
     # Pick up to 30 random songs (if enough)
-    songs = random.sample(filtered, min(30, len(filtered)))
+    songs = random.sample(filtered, min(10, len(filtered)))
 
     print(f"🎵 Selected {len(songs)} songs based on time {current_time}")
     
-    
-    # songs = random.sample(music_files, 30)
     news_clip = random.choice([npr_path, tpr_path])
     
     playlist = songs + [news_clip] + jingles
@@ -302,9 +300,12 @@ async def main():
 
     for i, track in enumerate(playlist):
         if track == npr_path:
-            prompt = "You are an experienced radio scriptwriter creating a short on-air segment for a news program on the radio station S-H-R-Q. The host should sound like an NPR presenter — warm, trustworthy, but not overly serious. Write a brief spoken script for a single host who introduces the hourly news broadcast, keeping the tone natural and intelligent. Keep the script to one sentence. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next, some national news from NPR'"
+            prompt = f"You are writing a short radio DJ intro for the station S-H-R-Q Radio. The host is Jessica. Her tone is casual, dry, and conversational — like a relaxed college radio DJ. Do not be poetic, sentimental, dramatic, or philosophical. Write only one or two short sentences before the final line. Avoid metaphors, emotional language, or commentary about the meaning of the music. Keep the language simple and natural. Output only Jessica's spoken words. No labels, explanations, or production notes. End with this exact line: 'Up next, some national news from NPR'"
+            # "You are an experienced radio scriptwriter creating a short on-air segment for a news program on the radio station S-H-R-Q. The host should sound like an NPR presenter — warm, trustworthy, but not overly serious. Write a brief spoken script for a single host who introduces the hourly news broadcast, keeping the tone natural and intelligent. Keep the script to one sentence. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next, some national news from NPR'"
         elif track == tpr_path:
-            prompt = "You are an experienced radio scriptwriter creating a short on-air segment for a news program on the radio station S-H-R-Q. The host should sound like an NPR presenter — warm, trustworthy, but not overly serious. Write a brief spoken script for a single host who introduces the hourly news broadcast, keeping the tone natural and intelligent. Keep the script to one sentence. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next, some local news from Texas Public Radio'"
+            prompt = f"You are writing a short radio DJ intro for the station S-H-R-Q Radio. The host is Jessica. Her tone is casual, dry, and conversational — like a relaxed college radio DJ. Do not be poetic, sentimental, dramatic, or philosophical. Write only one or two short sentences before the final line. Avoid metaphors, emotional language, or commentary about the meaning of the music. Keep the language simple and natural. Output only Jessica's spoken words. No labels, explanations, or production notes. End with this exact line: 'Up next, some local news from Texas Public Radio.'"
+            # "You are an experienced radio scriptwriter creating a short on-air segment for a news program on the radio station S-H-R-Q. The host should sound like an NPR presenter — warm, trustworthy, but not overly serious. Write a brief spoken script for a single host who introduces the hourly news broadcast, keeping the tone natural and intelligent. Keep the script to one sentence. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next, some local news from Texas Public Radio'"
+
         elif track==SHRQ_THEME: # We don't want an unknown introduction
             continue
         elif track in jingles:
@@ -314,7 +315,25 @@ async def main():
         else:
             md = extract_metadata(track)
             prompt = (
-                f"You are an experienced radio scriptwriter creating a short on-air segment for a music program on the radio station S-H-R-Q. Your tone should be — warm, playful, but not overly silly. Write a brief spoken script for a single host named Jessica who introduces and briefly comments on the song {md['title']} by {md['artist']}, keeping the tone natural and intelligent. Keep the script to one or two sentences. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next: here is {md['title']} by {md['artist']} from the album {md['album']}. You're listening to S-H-R-Q Radio.'"
+                # f"You are writing a short radio DJ intro for the station S-H-R-Q Radio. The host is Jessica. Her tone is casual, dry, and conversational — like a relaxed college radio DJ. Do not be poetic, sentimental, dramatic, or philosophical. Write only one or two short sentences before the final line. Avoid metaphors, emotional language, or commentary about the meaning of the music. Keep the language simple and natural. Output only Jessica's spoken words. No labels, explanations, or production notes. End with this exact line: 'Up next: here is {md['title']} by {md['artist']} from the album {md['album']}. You're listening to S-H-R-Q Radio.'"
+                f"""You are Jessica, the DJ on S-H-R-Q Radio.
+
+                    Write a short spoken intro (1–2 sentences) that casually introduces the song
+                    "{md['title']}" by {md['artist']}.
+
+                    Guidelines:
+                    - Briefly reference the artist, title, or album in a casual way.
+                    - Do NOT welcome listeners to the station or describe the show.
+                    - Do NOT explain the meaning of the music or provide artist biography.
+                    - Avoid poetic, sentimental, or dramatic language.
+                    - Avoid slang.
+                    - Keep the tone natural and friendly.
+
+                    Output only Jessica's spoken words.
+
+                    End with this exact line:
+                    Up next: here is {md['title']} by {md['artist']} from the album {md['album']}. You're listening to S-H-R-Q Radio.
+                    """
             )
 
         result = client.chat(model='llama3.2:1b', messages=[{"role": "user", "content": prompt}])
@@ -330,7 +349,7 @@ async def main():
 
     # Signoff
     signoff_prompt = (
-        "You are signing off for the day as Jessica, a radio DJ on S-H-R-Q. Give a fun, friendly farewell, no sound effects."
+        "You are signing off for the day as Jessica, a radio DJ on S-H-R-Q. Give a casual farewell, no sound effects."
     )
     signoff_result = client.chat(model='llama3.2:1b', messages=[{"role": "user", "content": signoff_prompt}])
     signoff_text = re.sub(r"<think>.*?</think>", "", signoff_result['message']['content'], flags=re.DOTALL).strip()
