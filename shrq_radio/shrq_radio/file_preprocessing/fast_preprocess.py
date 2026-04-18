@@ -19,7 +19,6 @@ from tqdm import tqdm
 
 import check_tags
 import picard_clean
-import energy_tagger
 
 
 # Configure MusicBrainz user agent (set this to whatever you want)
@@ -31,6 +30,8 @@ mb.set_useragent(
 
 # Timeout (in seconds) for processing a single file
 TIMEOUT_SECONDS = 60
+
+ENABLE_ENERGY_ANALYSIS = True
 
 
 def frame_text(frame):
@@ -116,7 +117,7 @@ def pre_process_mp3(path_str: str):
     - Backfill with MusicBrainz if artist/genre/album/year are missing
     - Save any updated tags
     - Print final tag state
-    - Run energy_tagger on the file
+    - Optionally run energy_tagger on the file when explicitly enabled
     """
     i = path_str
     try:
@@ -198,9 +199,14 @@ def pre_process_mp3(path_str: str):
         return
 
     # ------------------------------------ #
-    # Tag the Energy
+    # Tag the Energy (disabled by default)
     # ------------------------------------ #
+    if not ENABLE_ENERGY_ANALYSIS:
+        print(f"Skipping energy analysis for {i} because it is disabled in this script.")
+        return
+
     try:
+        import energy_tagger
         energy_tagger.analyze_mp3(i)
     except Exception as e:
         tb = traceback.format_exc()
@@ -232,7 +238,14 @@ def main():
         print("No MP3 files found.")
         return
 
-    print(f"Found {len(files)} MP3 files. Processing in parallel...")
+    energy_status = "enabled" if ENABLE_ENERGY_ANALYSIS else "disabled"
+    print(
+        f"Found {len(files)} MP3 files. Processing in parallel... "
+        f"Energy analysis is {energy_status}."
+    )
+
+    if not ENABLE_ENERGY_ANALYSIS:
+        print("Continuing with tag cleanup and MusicBrainz backfill only.")
 
     # Use all available CPU cores by default
     max_workers = os.cpu_count() or 4
