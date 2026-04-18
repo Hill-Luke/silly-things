@@ -2,7 +2,6 @@ import os
 import json
 from pathlib import Path
 from mutagen.id3 import ID3, ID3NoHeaderError
-import pandas as pd
 
 
 def extract_tags_from_mp3(mp3_path: Path) -> dict:
@@ -40,24 +39,22 @@ def extract_tags_from_mp3(mp3_path: Path) -> dict:
     return data
 
 
-def build_mp3_dataset(root_folder: str) -> pd.DataFrame:
+def build_mp3_dataset(root_folder: str) -> list:
+    """Walk the folder and return a list of dicts (one per MP3)."""
     root = Path(root_folder)
-    rows = []
+    records = []
 
     for mp3_file in root.rglob("*.mp3"):
         row = extract_tags_from_mp3(mp3_file)
-        rows.append(row)
+        records.append(row)
 
-    return pd.DataFrame(rows)
+    return records
 
 
 if __name__ == "__main__":
     folder = input("Enter path to your music folder: ").strip()
-    df = build_mp3_dataset(folder)
-    print(df.head())
-
-    # Convert DataFrame to list-of-dicts and write JSON with stdlib json
-    records = df.to_dict(orient="records")
+    records = build_mp3_dataset(folder)
+    print(records[:5])
 
     with open("mp3_dataset.json", "w") as f:
         json.dump(records, f, indent=2, default=str)
