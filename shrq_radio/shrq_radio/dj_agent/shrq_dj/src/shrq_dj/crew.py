@@ -3,7 +3,13 @@ from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
-from shrq_dj.tools.custom_tool import FilterTracksTool, AnalyzeTracksTool
+from shrq_dj.tools.custom_tool import (
+    QueryIntakeTool,
+    SelectRelevantFieldsTool,
+    FilterDatasetTool,
+    AnalyzeRelevantDataTool,
+    CuratePlaylistTool,
+)
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
@@ -25,7 +31,12 @@ class ShrqDj():
     def data_analyst(self) -> Agent:
         return Agent(
             config=self.agents_config['data_analyst'],  # type: ignore[index]
-            tools=[FilterTracksTool(), AnalyzeTracksTool()],
+            tools=[
+                QueryIntakeTool(),
+                SelectRelevantFieldsTool(),
+                FilterDatasetTool(),
+                AnalyzeRelevantDataTool(),
+            ],
             verbose=True,
         )
 
@@ -33,6 +44,7 @@ class ShrqDj():
     def disc_jockey(self) -> Agent:
         return Agent(
             config=self.agents_config['disc_jockey'], # type: ignore[index]
+            tools=[CuratePlaylistTool()],
             verbose=True
         )
 

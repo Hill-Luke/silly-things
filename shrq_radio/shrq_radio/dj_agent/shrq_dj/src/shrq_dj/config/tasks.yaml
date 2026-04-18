@@ -1,45 +1,117 @@
 query_intake:
   description: >
-    Review ONLY the user query {query} and restate it
-    in clear analytical terms. Identify what the user is truly asking for in terms of a
-    playlist concept (e.g., mood, era, genre, energy, tempo, length, or time-of-day use
-    case), including any explicit or obvious implicit constraints.
+    Review ONLY the user query {query} and restate it in clear analytical terms.
+    Identify what the user is truly asking for in playlist-concept terms (mood,
+    era, genre, energy, tempo, length, time-of-day use case), including explicit
+    and obvious implicit constraints.
   expected_output: >
-    A very short structured summary of the request in the following JSON format:
+    Return ONLY valid JSON (no markdown, no prose) in this exact shape:
     {
       "clarified_query": "single-sentence rewrite of {query}",
-      "playlist_objectives": ["bullet-style objectives like target mood, genres, years, BPM/energy ranges, track count"]
+      "playlist_objectives": ["short objective strings"],
+      "constraints": {
+        "genres": ["..."] ,
+        "year_range": {"min": null, "max": null},
+        "energy_range": {"min": null, "max": null},
+        "tempo_bpm_range": {"min": null, "max": null},
+        "target_track_count": null,
+        "must_include": ["..."],
+        "must_exclude": ["..."]
+      }
     }
   agent: data_analyst
 
 select_relevant_fields:
   description: >
-    Identify and select the fields from the database that are relevant to the playlist
-    objectives clarified in the query intake. This helps in filtering the dataset efficiently.
+    Using the JSON from query_intake as primary context, identify only the dataset
+    columns needed to satisfy the playlist objectives and constraints. Keep the
+    list minimal and explain field usage briefly for downstream filtering.
   expected_output: >
-    A list of field names from the data that are pertinent to the playlist objectives.
+    Return ONLY valid JSON (no markdown, no prose):
+    {
+      "selected_fields": ["field_name_1", "field_name_2"],
+      "field_rationale": {
+        "field_name_1": "why this field is needed",
+        "field_name_2": "why this field is needed"
+      },
+      "ready_for_filtering": true
+    }
   agent: data_analyst
 
 filter_dataset:
   description: >
-    Using the selected relevant fields and the clarified query, filter the dataset 
-    to include only entries that meet the playlist criteria.
+    Use query_intake JSON + select_relevant_fields JSON + {db}.
+    Apply the constraints to produce a filtered candidate pool. Do not curate final
+    ordering yet; this step should maximize valid candidates while respecting
+    constraints.
   expected_output: >
-    A filtered subset of {db} matching the playlist objectives.
+    Return ONLY valid JSON (no markdown, no prose):
+    {
+      "applied_filters": {
+        "genres": ["..."],
+        "year_range": {"min": null, "max": null},
+        "energy_range": {"min": null, "max": null},
+        "tempo_bpm_range": {"min": null, "max": null},
+        "must_include": ["..."],
+        "must_exclude": ["..."]
+      },
+      "candidate_count": 0,
+      "candidate_tracks": [
+        {
+          "Trackname": "...",
+          "Artist": "...",
+          "Album": "...",
+          "Year": "...",
+          "Genre": "...",
+          "energy": "..."
+        }
+      ],
+      "notes": "brief note on any relaxed/strict assumptions"
+    }
   agent: data_analyst
 
 analyze_relevant_data:
   description: >
-    Analyze the filtered dataset to extract insights such as distribution of genres,
-    energy levels, tempos, and other relevant statistics.
+    Analyze the filtered candidate pool from filter_dataset and summarize the
+    strongest patterns needed for curation decisions (genre mix, era spread,
+    energy profile, and any detected gaps vs objectives).
   expected_output: >
-    A summary of analytical insights derived from the filtered dataset.
+    Return ONLY valid JSON (no markdown, no prose):
+    {
+      "summary_insights": ["short insight strings"],
+      "distribution": {
+        "genres": {"genre_a": 0, "genre_b": 0},
+        "years": {"bucket_or_year": 0},
+        "energy": {"low": 0, "mid": 0, "high": 0}
+      },
+      "gaps_vs_objectives": ["any mismatch or risk to objective fit"],
+      "curation_guidance": ["ranking/selection guidance for final playlist"]
+    }
   agent: data_analyst
 
 curate_playlist:
   description: >
-    Curate a playlist based on the analyzed data and the clarified query, ensuring it
-    meets the user's objectives in terms of mood, genre, energy, and other factors.
+    Use all prior JSON outputs to produce the final playlist. Prioritize objective
+    fit, variety, and coherent flow. If candidate_count is below target, return the
+    best possible list and explain the shortfall clearly.
   expected_output: >
-    A finalized playlist with track details formatted as per the user's requirements.
+    Return ONLY valid JSON (no markdown, no prose):
+    {
+      "playlist_title": "...",
+      "final_track_count": 0,
+      "tracks": [
+        {
+          "position": 1,
+          "Trackname": "...",
+          "Artist": "...",
+          "Album": "...",
+          "Year": "...",
+          "Genre": "...",
+          "energy": "...",
+          "why_selected": "one sentence"
+        }
+      ],
+      "objective_fit_summary": ["how the list satisfies key objectives"],
+      "unmet_constraints": ["only include if any constraints could not be met"]
+    }
   agent: disc_jockey
