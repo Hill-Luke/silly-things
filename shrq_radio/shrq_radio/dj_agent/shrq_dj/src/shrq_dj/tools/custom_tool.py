@@ -227,8 +227,11 @@ def _parse_include_exclude(query: str) -> Tuple[List[str], List[str]]:
     must_exclude: List[str] = []
     must_include: List[str] = []
 
-    # Simple phrase-based parsing
-    for pat in [r"include\s+([a-z0-9&\-\s]+)", r"must have\s+([a-z0-9&\-\s]+)", r"by\s+([a-z0-9&\-\s]+)", r"from\s+([a-z0-9&\-\s]+)"]:
+    # Parse explicit exclusions.
+    for pat in [
+        r"(?:exclude|without|avoid|no)\s+([a-z0-9&\-\s]+)",
+        r"not\s+(?:including|with)\s+([a-z0-9&\-\s]+)",
+    ]:
         for m in re.findall(pat, q):
             token = m.strip().split(",")[0].strip()
             # Clean up common prefixes and quotes
@@ -236,13 +239,45 @@ def _parse_include_exclude(query: str) -> Tuple[List[str], List[str]]:
             if token:
                 must_exclude.append(token)
 
-    for pat in [r"include\s+([a-z0-9&\-\s]+)", r"must have\s+([a-z0-9&\-\s]+)", r"by\s+([a-z0-9&\-\s]+)", r"from\s+([a-z0-9&\-\s]+)"]:
+    # Parse includes and artist/album hints.
+    for pat in [
+        r"include\s+([a-z0-9&\-\s]+)",
+        r"must have\s+([a-z0-9&\-\s]+)",
+        r"by\s+([a-z0-9&\-\s]+)",
+        r"from\s+([a-z0-9&\-\s]+)",
+    ]:
         for m in re.findall(pat, q):
             token = m.strip().split(",")[0].strip()
             if token:
                 must_include.append(token)
 
     return list(dict.fromkeys(must_include)), list(dict.fromkeys(must_exclude))
+
+
+def _constraint_tokens(value: str) -> List[str]:
+    words = re.findall(r"[a-z0-9&\-]+", str(value).lower())
+    stop = {
+        "the", "and", "for", "with", "from", "into", "that", "this", "song",
+        "songs", "track", "tracks", "artist", "album", "music",
+    }
+    return [w for w in words if len(w) >= 3 and w not in stop]
+
+
+def _matches_include(text: str, includes: List[str]) -> bool:
+    if not includes:
+        return True
+
+    for token in includes:
+        token_l = str(token).strip().lower()
+        if not token_l:
+            continue
+        if token_l in text:
+            return True
+        terms = _constraint_tokens(token_l)
+        if terms and any(term in text for term in terms):
+            return True
+
+    return False
 
 
 def _dedupe_by_track_artist(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -530,6 +565,7 @@ class FilterDatasetTool(BaseTool):
         constraints = intake.get("constraints", {}) if isinstance(intake, dict) else {}
         selected_fields = selected_obj.get("selected_fields", []) if isinstance(selected_obj, dict) else []
         selected_fields = selected_fields if isinstance(selected_fields, list) else []
+        target_count = _to_int(constraints.get("target_track_count"))
 
         genres = [str(g).lower() for g in constraints.get("genres", [])]
         year_range = constraints.get("year_range", {}) if isinstance(constraints.get("year_range", {}), dict) else {}
@@ -587,7 +623,7 @@ class FilterDatasetTool(BaseTool):
             if use_exclude and must_exclude and any(token in text for token in must_exclude):
                 return False
 
-            if use_include and must_include and not any(token in text for token in must_include):
+            if use_include and must_include and not _matches_include(text, must_include):
                 return False
 
             return True
@@ -603,21 +639,22 @@ class FilterDatasetTool(BaseTool):
 
         filtered: List[Dict[str, Any]] = _collect()
         relaxation_note = "Strict filtering applied from parsed constraints."
+        desired_pool = min(limit or 300, max(8, (target_count or 6) * 2))
 
-        # Progressive fallback: if strict match is empty, relax constraints in priority order.
-        if not filtered:
+        # Progressive fallback: if matches are sparse, relax constraints in priority order.
+        if len(filtered) < desired_pool:
             filtered = _collect(use_include=False)
             if filtered:
-                relaxation_note = "No exact match found; relaxed must_include constraint."
-        if not filtered:
+                relaxation_note = "Relaxed must_include constraint to improve candidate coverage."
+        if len(filtered) < desired_pool:
             filtered = _collect(use_include=False, use_year=False)
             if filtered:
-                relaxation_note = "No exact match found; relaxed must_include and year constraints."
-        if not filtered:
+                relaxation_note = "Relaxed include and year constraints to improve candidate coverage."
+        if len(filtered) < desired_pool:
             filtered = _collect(use_include=False, use_year=False, use_energy=False, use_bpm=False)
             if filtered:
-                relaxation_note = "No exact match found; relaxed include, year, energy, and bpm constraints."
-        if not filtered:
+                relaxation_note = "Relaxed include, year, energy, and bpm constraints to improve candidate coverage."
+        if len(filtered) < desired_pool:
             filtered = _collect(
                 use_include=False,
                 use_year=False,
@@ -626,7 +663,7 @@ class FilterDatasetTool(BaseTool):
                 use_genre=False,
             )
             if filtered:
-                relaxation_note = "No exact match found; returned next-best options with only exclusions enforced."
+                relaxation_note = "Returned broader next-best options with only exclusions enforced."
 
         filtered = _dedupe_by_track_artist(filtered)
 
