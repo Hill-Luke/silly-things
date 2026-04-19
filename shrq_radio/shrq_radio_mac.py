@@ -24,7 +24,6 @@ from piper import PiperVoice, SynthesisConfig
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
-
 # Adding new packages for new TTS
 from pathlib import Path
 from openai import OpenAI
@@ -271,8 +270,17 @@ def build_playlist_from_crew(playlist_prompt):
     if str(DJ_AGENT_SRC) not in sys.path:
         sys.path.insert(0, str(DJ_AGENT_SRC))
 
-    from shrq_dj.main import _load_env_file  # type: ignore
-    from shrq_dj.crew import ShrqDj  # type: ignore
+    try:
+        from shrq_dj.main import _load_env_file  # type: ignore
+        from shrq_dj.crew import ShrqDj  # type: ignore
+    except ModuleNotFoundError as exc:
+        if exc.name == "crewai":
+            raise ModuleNotFoundError(
+                "Missing dependency 'crewai'. Install dependencies with "
+                "`pip install -r requirements.txt` from `silly-things/shrq_radio` "
+                "or `pip install 'crewai[tools]>=0.157.0,<1.0.0'`."
+            ) from exc
+        raise
 
     _load_env_file()
     if DJ_DATASET_PATH.exists():

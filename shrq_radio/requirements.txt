@@ -16,3 +16,4 @@ librosa
 numpy
 pyloudnorm
 soundfile
+crewai[tools]>=0.157.0,<1.0.0
