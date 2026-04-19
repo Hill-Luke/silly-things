@@ -3,6 +3,7 @@ from typing import Type, List, Dict, Any, Optional, Tuple
 import json
 import os
 import re
+import sys
 from collections import Counter
 
 from crewai.tools import BaseTool
@@ -108,6 +109,95 @@ def _to_float(value: Any) -> Optional[float]:
         return None
 
 
+def _word_to_int(text: str) -> Optional[int]:
+    # Simple mapping for common number words used in queries.
+    if not isinstance(text, str):
+        return None
+    t = text.strip().lower()
+    small = {
+        "zero": 0,
+        "one": 1,
+        "two": 2,
+        "three": 3,
+        "four": 4,
+        "five": 5,
+        "six": 6,
+        "seven": 7,
+        "eight": 8,
+        "nine": 9,
+        "ten": 10,
+        "eleven": 11,
+        "twelve": 12,
+        "thirteen": 13,
+        "fourteen": 14,
+        "fifteen": 15,
+        "sixteen": 16,
+        "seventeen": 17,
+        "eighteen": 18,
+        "nineteen": 19,
+        "twenty": 20,
+        "thirty": 30,
+        "forty": 40,
+        "fifty": 50,
+        "sixty": 60,
+        "seventy": 70,
+        "eighty": 80,
+        "ninety": 90,
+        "hundred": 100,
+    }
+    # Direct match
+    if t in small:
+        return small[t]
+
+    # Composite like 'twenty five' or 'ninety two'
+    parts = re.findall(r"[a-z]+", t)
+    if parts:
+        total = 0
+        last = 0
+        for p in parts:
+            v = small.get(p)
+            if v is None:
+                continue
+            if v == 100:
+                if last == 0:
+                    last = 1
+                last = last * v
+                total += last
+                last = 0
+            else:
+                last += v
+        total += last
+        if total > 0:
+            return total
+
+    # Extract digits if present (e.g., '10', '10 tracks')
+    m = re.search(r"(\d{1,4})", t)
+    if m:
+        try:
+            return int(m.group(1))
+        except ValueError:
+            return None
+    return None
+
+
+def _coerce_int(value: Any) -> Optional[int]:
+    # Try robust coercion for ints: numeric strings, floats, and common words.
+    if isinstance(value, int):
+        return value
+    if value is None:
+        return None
+    # Try direct numeric parsing
+    n = _to_int(value)
+    if n is not None:
+        return n
+    # Try word parsing
+    if isinstance(value, str):
+        w = _word_to_int(value)
+        if w is not None:
+            return w
+    return None
+
+
 def _extract_year_range(query: str) -> Tuple[Optional[int], Optional[int]]:
     years = [int(y) for y in re.findall(r"\b(19\d{2}|20\d{2})\b", query)]
     if len(years) >= 2:
@@ -197,7 +287,10 @@ def _normalize_energy_label(value: Any) -> Optional[str]:
 
 def _extract_bpm_range(query: str) -> Tuple[Optional[float], Optional[float]]:
     q = query.lower()
-    range_match = re.search(r"\b(\d{2,3})\s*[-to]{1,3}\s*(\d{2,3})\s*bpm\b", q)
+    # Accept forms like '100-120 bpm', '100 to 120 bpm', 'between 100 and 120 bpm'
+    range_match = re.search(r"\b(\d{2,3})\s*(?:-|–|—|to)\s*(\d{2,3})\s*bpm\b", q)
+    if not range_match:
+        range_match = re.search(r"\bbetween\s*(\d{2,3})\s*(?:and|to|-)\s*(\d{2,3})\s*bpm\b", q)
     if range_match:
         a = float(range_match.group(1))
         b = float(range_match.group(2))
@@ -303,7 +396,14 @@ def _load_records_from_path(db_path: str) -> List[Dict[str, Any]]:
     try:
         with open(db_path, "r") as f:
             payload = json.load(f)
-    except (OSError, json.JSONDecodeError):
+    except FileNotFoundError as e:
+        print(f"ERROR: Dataset file not found at {db_path}: {e}", file=sys.stderr)
+        return []
+    except json.JSONDecodeError as e:
+        print(f"ERROR: Failed to decode JSON from {db_path}: {e}", file=sys.stderr)
+        return []
+    except OSError as e:
+        print(f"ERROR: OS error reading {db_path}: {e}", file=sys.stderr)
         return []
 
     if isinstance(payload, list):
@@ -565,7 +665,7 @@ class FilterDatasetTool(BaseTool):
         constraints = intake.get("constraints", {}) if isinstance(intake, dict) else {}
         selected_fields = selected_obj.get("selected_fields", []) if isinstance(selected_obj, dict) else []
         selected_fields = selected_fields if isinstance(selected_fields, list) else []
-        target_count = _to_int(constraints.get("target_track_count"))
+        target_count = _coerce_int(constraints.get("target_track_count"))
 
         genres = [str(g).lower() for g in constraints.get("genres", [])]
         year_range = constraints.get("year_range", {}) if isinstance(constraints.get("year_range", {}), dict) else {}
@@ -582,6 +682,12 @@ class FilterDatasetTool(BaseTool):
         b_max = _to_float(bpm_range.get("max"))
 
         norm_records = _normalize_records(records_source)
+
+        # Safely map energy labels to indices for comparisons. Use None to indicate
+        # an unavailable bound so we can skip that check without raising KeyError.
+        e_min_idx = ENERGY_INDEX.get(e_min) if isinstance(e_min, str) else None
+        e_max_idx = ENERGY_INDEX.get(e_max) if isinstance(e_max, str) else None
+
         def _passes(
             rec: Dict[str, Any],
             use_genre: bool = True,
@@ -605,14 +711,13 @@ class FilterDatasetTool(BaseTool):
                 return False
 
             energy_val = _normalize_energy_label(rec.get("energy"))
-            if use_energy and e_min is not None and (
-                energy_val is None or ENERGY_INDEX.get(energy_val, -1) < ENERGY_INDEX[e_min]
-            ):
-                return False
-            if use_energy and e_max is not None and (
-                energy_val is None or ENERGY_INDEX.get(energy_val, 10) > ENERGY_INDEX[e_max]
-            ):
-                return False
+            energy_idx = ENERGY_INDEX.get(energy_val) if isinstance(energy_val, str) else None
+            if use_energy and e_min_idx is not None:
+                if energy_idx is None or energy_idx < e_min_idx:
+                    return False
+            if use_energy and e_max_idx is not None:
+                if energy_idx is None or energy_idx > e_max_idx:
+                    return False
 
             bpm_val = _to_float(rec.get("bpm"))
             if use_bpm and b_min is not None and (bpm_val is None or bpm_val < b_min):
@@ -753,7 +858,7 @@ class AnalyzeRelevantDataTool(BaseTool):
 
         gaps: List[str] = []
         constraints = intake.get("constraints", {}) if isinstance(intake, dict) else {}
-        target_count = constraints.get("target_track_count")
+        target_count = _coerce_int(constraints.get("target_track_count"))
         if isinstance(target_count, int) and len(tracks) < target_count:
             gaps.append(
                 f"Candidate pool ({len(tracks)}) is smaller than target track count ({target_count})."
@@ -817,7 +922,7 @@ class CuratePlaylistTool(BaseTool):
         candidates = candidates if isinstance(candidates, list) else []
         norm_candidates = _normalize_records([c for c in candidates if isinstance(c, dict)])
 
-        target_count = constraints.get("target_track_count")
+        target_count = _coerce_int(constraints.get("target_track_count"))
         if not isinstance(target_count, int) or target_count <= 0:
             target_count = min(20, max(10, len(norm_candidates))) if norm_candidates else 10
 

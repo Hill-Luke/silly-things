@@ -2,6 +2,7 @@
 import random
 import os
 import json
+import ast
 import re
 import requests
 import asyncio
@@ -61,6 +62,9 @@ TPR_DIR = BASE_DIR / "data/tpr_local"
 RESPONSES_DIR = BASE_DIR / "data/dj_responses"
 OUTPUT_DIR = BASE_DIR / "output"
 JINGLE_DIR = BASE_DIR / "jingles"
+DJ_AGENT_ROOT = Path("/Users/lukeofthehill/repos/silly-things/shrq_radio/shrq_radio/dj_agent/shrq_dj")
+DJ_AGENT_SRC = DJ_AGENT_ROOT / "src"
+DJ_DATASET_PATH = DJ_AGENT_ROOT / "mp3_dataset_MAC.json"
 
 
 NPR_URL = "http://public.npr.org/anon.npr-mp3/npr/news/newscast.mp3?_kip_ipx=1006340484-1748098441"
@@ -225,6 +229,65 @@ def extract_metadata(file_path):
 
     return file
 
+
+def _extract_playlist_filepaths(crew_output):
+    payload = crew_output
+    for attr in ("json_dict", "raw", "result"):
+        value = getattr(crew_output, attr, None)
+        if value:
+            payload = value
+            break
+
+    data = payload
+    if isinstance(data, str):
+        text = data.strip()
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError:
+            try:
+                data = ast.literal_eval(text)
+            except (ValueError, SyntaxError):
+                return []
+
+    if not isinstance(data, dict):
+        return []
+
+    tracks = data.get("tracks", [])
+    if not isinstance(tracks, list):
+        return []
+
+    filepaths = []
+    for track in tracks:
+        if not isinstance(track, dict):
+            continue
+        filepath = track.get("Filepath")
+        if isinstance(filepath, str) and filepath.strip():
+            filepaths.append(filepath.strip())
+
+    return filepaths
+
+
+def build_playlist_from_crew(playlist_prompt):
+    if str(DJ_AGENT_SRC) not in sys.path:
+        sys.path.insert(0, str(DJ_AGENT_SRC))
+
+    from shrq_dj.main import _load_env_file  # type: ignore
+    from shrq_dj.crew import ShrqDj  # type: ignore
+
+    _load_env_file()
+    if DJ_DATASET_PATH.exists():
+        os.environ["SHRQ_DB_PATH"] = str(DJ_DATASET_PATH)
+
+    db_path = os.environ.get("SHRQ_DB_PATH", str(DJ_DATASET_PATH))
+    inputs = {
+        "db_path": db_path,
+        "db_summary": f"Dataset path: {db_path}",
+        "query": playlist_prompt,
+        "prompt": playlist_prompt,
+    }
+    result = ShrqDj().crew().kickoff(inputs=inputs)
+    return [Path(p) for p in _extract_playlist_filepaths(result)]
+
 # ------------------------
 # Main function
 # ------------------------
@@ -247,47 +310,18 @@ async def main():
      
 
 
-    # Random playlist
-    music_files = list(MUSIC_DIR.glob("*.mp3"))
-    if len(music_files) < 10:
-        print("❌ Not enough songs in the music folder. Please add more.")
-        return
-    
-    # Read the energy of the files, and be selective based on the time
-
-
-    # Read the energy of the files, and be selective based on the time
-    energies = {}
-    for sg in music_files:
-        energy_value = read_energy_tag(sg)
-        if energy_value:
-            energies[sg] = energy_value
-
-    # Get the current time (not timestamp string)
     current_time = datetime.now().time()
-
-    # Morning selection: before 9am
     if current_time <= time(9, 0, 0):
-        filtered = [sg for sg, e in energies.items() if e in ['low-low', 'low-medium', 'medium_low']]
-    # Daytime selection: 9am–6pm
+        playlist_prompt = "thirty songs with low-medium, medium-low, or low-low energy, suitable for a calm morning radio show."
     elif time(9, 0, 0) < current_time < time(18, 0, 0):
-        filtered = list(energies.keys())
-    # Evening selection: after 6pm
+        playlist_prompt = "thirty songs with a mix of energy levels, suitable for a daytime radio show."
     else:
-        filtered = [sg for sg, e in energies.items() if e in ['low-medium', 'medium-medium', 'medium_low']]
+        playlist_prompt = "thirty songs with low-medium, medium-medium, or medium-low energy, suitable for a relaxed evening radio show."
 
-    # Pick up to 30 random songs (if enough)
-    songs = random.sample(filtered, min(30, len(filtered)))
-
-    print(f"🎵 Selected {len(songs)} songs based on time {current_time}")
-    
-    news_clip = random.choice([npr_path, tpr_path])
-    
-    playlist = songs + [news_clip] + jingles
-    random.shuffle(playlist)
-
-    # Always start with the SHRQ theme. 
-    playlist=[SHRQ_THEME]+playlist
+    playlist = build_playlist_from_crew(playlist_prompt)
+    if not playlist:
+        print("❌ Crew returned an empty playlist.")
+        return
 
     print("\nFinal Playlist:")
     for i, track in enumerate(playlist):

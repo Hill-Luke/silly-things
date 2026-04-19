@@ -21,7 +21,7 @@ class ShrqDj():
 
     agents: List[BaseAgent]
     tasks: List[Task]
-    llm_model: str = os.getenv("OPENAI_MODEL", "openai/gpt-4o-mini")
+    llm_model: str = os.getenv("OPENAI_MODEL", "openai/gpt-5-mini")
 
     # Learn more about YAML configuration files here:
     # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
