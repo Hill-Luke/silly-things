@@ -40,7 +40,7 @@ select_relevant_fields:
 
 filter_dataset:
   description: >
-    Use query_intake JSON + select_relevant_fields JSON + {db}.
+    Use query_intake JSON + select_relevant_fields JSON + the full dataset at {db_path}.
     Apply the constraints to produce a filtered candidate pool. Do not curate final
     ordering yet; this step should maximize valid candidates while respecting
     constraints.
@@ -63,7 +63,8 @@ filter_dataset:
           "Album": "...",
           "Year": "...",
           "Genre": "...",
-          "energy": "..."
+          "energy": "...",
+          "Filepath": "..."
         }
       ],
       "notes": "brief note on any relaxed/strict assumptions"
@@ -82,7 +83,7 @@ analyze_relevant_data:
       "distribution": {
         "genres": {"genre_a": 0, "genre_b": 0},
         "years": {"bucket_or_year": 0},
-        "energy": {"low": 0, "mid": 0, "high": 0}
+        "energy": {"low_low": 0, "medium_low": 0, "high_low": 0, "medium_medium": 0, "medium_high": 0, "high_medium": 0, "high_high": 0}
       },
       "gaps_vs_objectives": ["any mismatch or risk to objective fit"],
       "curation_guidance": ["ranking/selection guidance for final playlist"]
@@ -108,6 +109,7 @@ curate_playlist:
           "Year": "...",
           "Genre": "...",
           "energy": "...",
+          "Filepath": "...",
           "why_selected": "one sentence"
         }
       ],

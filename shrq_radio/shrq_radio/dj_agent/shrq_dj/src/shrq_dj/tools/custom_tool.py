@@ -1,6 +1,7 @@
 from typing import Type, List, Dict, Any, Optional, Tuple
 
 import json
+import os
 import re
 from collections import Counter
 
@@ -32,6 +33,11 @@ KEY_ALIASES = {
     "energy": "energy",
     "bpm": "bpm",
     "tempo": "bpm",
+    "filepath": "Filepath",
+    "file_path": "Filepath",
+    "path": "Filepath",
+    "filename": "Filepath",
+    "full_path": "Filepath",
 }
 
 KNOWN_GENRES = [
@@ -40,13 +46,32 @@ KNOWN_GENRES = [
     "punk", "classical", "latin", "reggaeton", "soul", "funk", "disco", "lofi",
 ]
 
+ENERGY_CADENCE = [
+    "low_low",
+    "medium_low",
+    "high_low",
+    "medium_medium",
+    "medium_high",
+    "high_medium",
+    "high_high"
+]
+
+ENERGY_INDEX = {label: idx for idx, label in enumerate(ENERGY_CADENCE)}
+
 
 def _safe_json_loads(value: Any, fallback: Any) -> Any:
     if isinstance(value, (dict, list)):
         return value
     if isinstance(value, str):
+        cleaned = value.strip()
+        if not cleaned:
+            return fallback
+        # Tolerate fenced JSON occasionally emitted by LLMs.
+        if cleaned.startswith("```"):
+            cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
+            cleaned = re.sub(r"\s*```$", "", cleaned)
         try:
-            return json.loads(value)
+            return json.loads(cleaned)
         except json.JSONDecodeError:
             return fallback
     return fallback
@@ -107,15 +132,67 @@ def _extract_track_count(query: str) -> Optional[int]:
     return None
 
 
-def _extract_energy_range(query: str) -> Tuple[Optional[float], Optional[float]]:
+def _extract_energy_range(query: str) -> Tuple[Optional[str], Optional[str]]:
     q = query.lower()
+    if any(word in q for word in ["very low energy", "super chill", "sleep"]):
+        return "low_low", "medium_low"
     if any(word in q for word in ["chill", "calm", "ambient", "soft", "relax"]):
-        return 0.0, 0.45
-    if any(word in q for word in ["high energy", "energetic", "hype", "workout", "intense"]):
-        return 0.65, 1.0
+        return "medium_low", "high_low"
     if any(word in q for word in ["mid energy", "moderate", "balanced"]):
-        return 0.35, 0.75
+        return "high_low", "medium_high"
+    if any(word in q for word in ["high energy", "energetic", "hype", "workout", "intense"]):
+        return "medium_high", "high_high"
     return None, None
+
+
+def _normalize_energy_label(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+
+    # Allow legacy numeric energies and map to tag cadence.
+    as_float = _to_float(value)
+    if as_float is not None:
+        if as_float < 0.14:
+            return "low_low"
+        if as_float < 0.28:
+            return "medium_low"
+        if as_float < 0.42:
+            return "high_low"
+        if as_float < 0.56:
+            return "medium_medium"
+        if as_float < 0.70:
+            return "medium_high"
+        if as_float < 0.84:
+            return "high_medium"
+        return "high_high"
+
+    label = str(value).strip().lower().replace("-", "_").replace(" ", "_")
+    if label in ENERGY_INDEX:
+        return label
+
+    # Common shorthand
+    aliases = {
+        "lowlow": "low_low",
+        "low": "low_low",
+        "med_low": "medium_low",
+        "mediumlow": "medium_low",
+        "highlow": "high_low",
+        "high_low": "high_low",
+        "med": "medium_medium",
+        "medium": "medium_medium",
+        "mid": "medium_medium",
+        "mediummedium": "medium_medium",
+        "med_high": "medium_high",
+        "mediumhigh": "medium_high",
+        "highmedium": "high_medium",
+        "highhigh": "high_high",
+        "high": "high_high",
+        "vlow": "low_low",
+        "vhigh": "high_high",
+        "very_low": "low_low",
+        "very_high": "high_high",
+    }
+    return aliases.get(label)
 
 
 def _extract_bpm_range(query: str) -> Tuple[Optional[float], Optional[float]]:
@@ -151,13 +228,15 @@ def _parse_include_exclude(query: str) -> Tuple[List[str], List[str]]:
     must_include: List[str] = []
 
     # Simple phrase-based parsing
-    for pat in [r"without\s+([a-z0-9&\-\s]+)", r"no\s+([a-z0-9&\-\s]+)"]:
+    for pat in [r"include\s+([a-z0-9&\-\s]+)", r"must have\s+([a-z0-9&\-\s]+)", r"by\s+([a-z0-9&\-\s]+)", r"from\s+([a-z0-9&\-\s]+)"]:
         for m in re.findall(pat, q):
             token = m.strip().split(",")[0].strip()
+            # Clean up common prefixes and quotes
+            token = re.sub(r"^(the\s+)?band\s+", "", token, flags=re.IGNORECASE).strip("'\"").strip()
             if token:
                 must_exclude.append(token)
 
-    for pat in [r"include\s+([a-z0-9&\-\s]+)", r"must have\s+([a-z0-9&\-\s]+)"]:
+    for pat in [r"include\s+([a-z0-9&\-\s]+)", r"must have\s+([a-z0-9&\-\s]+)", r"by\s+([a-z0-9&\-\s]+)", r"from\s+([a-z0-9&\-\s]+)"]:
         for m in re.findall(pat, q):
             token = m.strip().split(",")[0].strip()
             if token:
@@ -181,8 +260,22 @@ def _dedupe_by_track_artist(records: List[Dict[str, Any]]) -> List[Dict[str, Any
 def _record_text(record: Dict[str, Any]) -> str:
     return " ".join(
         str(record.get(k, ""))
-        for k in ["Trackname", "Artist", "Album", "Genre", "Year"]
+        for k in ["Trackname", "Artist", "Album", "Genre", "Year", "Filepath"]
     ).lower()
+
+
+def _load_records_from_path(db_path: str) -> List[Dict[str, Any]]:
+    try:
+        with open(db_path, "r") as f:
+            payload = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return []
+
+    if isinstance(payload, list):
+        return [r for r in payload if isinstance(r, dict)]
+    if isinstance(payload, dict):
+        return [payload]
+    return []
 
 
 # -------------------------
@@ -190,7 +283,10 @@ def _record_text(record: Dict[str, Any]) -> str:
 # -------------------------
 
 class QueryIntakeInput(BaseModel):
-    query: str = Field(..., description="Raw user query requesting playlist curation.")
+    query: Optional[Any] = Field(None, description="Raw user query requesting playlist curation.")
+    prompt: Optional[Any] = Field(None, description="Alias for query.")
+    user_query: Optional[Any] = Field(None, description="Alias for query.")
+    request: Optional[Any] = Field(None, description="Alias for query.")
 
 
 class QueryIntakeTool(BaseTool):
@@ -201,8 +297,36 @@ class QueryIntakeTool(BaseTool):
     )
     args_schema: Type[BaseModel] = QueryIntakeInput
 
-    def _run(self, query: str) -> str:
-        q = query.strip()
+    def _run(
+        self,
+        query: Optional[Any] = None,
+        prompt: Optional[Any] = None,
+        user_query: Optional[Any] = None,
+        request: Optional[Any] = None,
+    ) -> str:
+        raw = query if query not in (None, "") else prompt
+        if raw in (None, ""):
+            raw = user_query
+        if raw in (None, ""):
+            raw = request
+
+        parsed = _safe_json_loads(raw, fallback=raw)
+        if isinstance(parsed, dict):
+            raw = (
+                parsed.get("query")
+                or parsed.get("prompt")
+                or parsed.get("user_query")
+                or parsed.get("request")
+                or ""
+            )
+        elif isinstance(parsed, list):
+            raw = " ".join(str(x) for x in parsed if x is not None)
+        else:
+            raw = parsed
+
+        q = str(raw).strip()
+        if not q:
+            q = "Build a coherent playlist matching user mood and intent."
         q_lower = q.lower()
 
         genres = _extract_genres(q_lower)
@@ -249,12 +373,16 @@ class QueryIntakeTool(BaseTool):
 # -------------------------
 
 class SelectRelevantFieldsInput(BaseModel):
-    query_intake_json: str = Field(
+    query_intake_json: Any = Field(
         ..., description="JSON output from query_intake task/tool."
     )
-    records: Optional[List[Dict[str, Any]]] = Field(
+    records: Optional[Any] = Field(
         None,
-        description="Optional dataset records to detect available fields.",
+        description="Optional dataset records as list-of-dicts or JSON string.",
+    )
+    db: Optional[Any] = Field(
+        None,
+        description="Alias for records; accepts list-of-dicts or JSON string.",
     )
 
 
@@ -267,15 +395,25 @@ class SelectRelevantFieldsTool(BaseTool):
 
     def _run(
         self,
-        query_intake_json: str,
-        records: Optional[List[Dict[str, Any]]] = None,
+        query_intake_json: Any,
+        records: Optional[Any] = None,
+        db: Optional[Any] = None,
     ) -> str:
+        source_records = _safe_json_loads(records, fallback=records)
+        if not isinstance(source_records, list):
+            source_records = _safe_json_loads(db, fallback=db)
+        if isinstance(source_records, dict):
+            source_records = [source_records]
+        if not isinstance(source_records, list):
+            source_records = []
+        source_records = [r for r in source_records if isinstance(r, dict)]
+
         intake = _safe_json_loads(query_intake_json, fallback={})
         constraints = intake.get("constraints", {}) if isinstance(intake, dict) else {}
 
         available = set()
-        if records:
-            norm = _normalize_records(records[:25])
+        if source_records:
+            norm = _normalize_records(source_records[:25])
             for rec in norm:
                 available.update(rec.keys())
 
@@ -333,9 +471,20 @@ class SelectRelevantFieldsTool(BaseTool):
 # -------------------------
 
 class FilterDatasetInput(BaseModel):
-    records: List[Dict[str, Any]] = Field(..., description="Full dataset records.")
-    query_intake_json: str = Field(..., description="JSON output from query_intake.")
-    selected_fields_json: Optional[str] = Field(
+    records: Optional[Any] = Field(
+        None,
+        description="Full dataset records as a list of dicts or a JSON string.",
+    )
+    db: Optional[Any] = Field(
+        None,
+        description="Alias for records; accepts list-of-dicts or JSON string.",
+    )
+    db_path: Optional[str] = Field(
+        None,
+        description="Path to dataset JSON file. Used when records are not passed directly.",
+    )
+    query_intake_json: Any = Field(..., description="JSON output from query_intake.")
+    selected_fields_json: Optional[Any] = Field(
         None,
         description="JSON output from select_relevant_fields.",
     )
@@ -354,11 +503,27 @@ class FilterDatasetTool(BaseTool):
 
     def _run(
         self,
-        records: List[Dict[str, Any]],
-        query_intake_json: str,
-        selected_fields_json: Optional[str] = None,
+        query_intake_json: Any,
+        records: Optional[Any] = None,
+        db: Optional[Any] = None,
+        db_path: Optional[str] = None,
+        selected_fields_json: Optional[Any] = None,
         limit: Optional[int] = 300,
     ) -> str:
+        def _coerce_records(value: Any) -> List[Dict[str, Any]]:
+            parsed = _safe_json_loads(value, fallback=value)
+            if isinstance(parsed, dict):
+                return [parsed]
+            if isinstance(parsed, list):
+                return [r for r in parsed if isinstance(r, dict)]
+            return []
+
+        records_source = _coerce_records(records) or _coerce_records(db)
+        if not records_source:
+            path = db_path or os.getenv("SHRQ_DB_PATH")
+            if path:
+                records_source = _load_records_from_path(path)
+
         intake = _safe_json_loads(query_intake_json, fallback={})
         selected_obj = _safe_json_loads(selected_fields_json, fallback={}) if selected_fields_json else {}
 
@@ -375,57 +540,100 @@ class FilterDatasetTool(BaseTool):
 
         y_min = _to_int(year_range.get("min"))
         y_max = _to_int(year_range.get("max"))
-        e_min = _to_float(energy_range.get("min"))
-        e_max = _to_float(energy_range.get("max"))
+        e_min = _normalize_energy_label(energy_range.get("min"))
+        e_max = _normalize_energy_label(energy_range.get("max"))
         b_min = _to_float(bpm_range.get("min"))
         b_max = _to_float(bpm_range.get("max"))
 
-        norm_records = _normalize_records(records)
-        filtered: List[Dict[str, Any]] = []
-
-        for rec in norm_records:
+        norm_records = _normalize_records(records_source)
+        def _passes(
+            rec: Dict[str, Any],
+            use_genre: bool = True,
+            use_year: bool = True,
+            use_energy: bool = True,
+            use_bpm: bool = True,
+            use_include: bool = True,
+            use_exclude: bool = True,
+        ) -> bool:
             text = _record_text(rec)
 
-            if genres:
+            if use_genre and genres:
                 rec_genre = str(rec.get("Genre", "")).lower()
                 if not any(g in rec_genre for g in genres):
-                    continue
+                    return False
 
             year_val = _to_int(rec.get("Year"))
-            if y_min is not None and (year_val is None or year_val < y_min):
-                continue
-            if y_max is not None and (year_val is None or year_val > y_max):
-                continue
+            if use_year and y_min is not None and (year_val is None or year_val < y_min):
+                return False
+            if use_year and y_max is not None and (year_val is None or year_val > y_max):
+                return False
 
-            energy_val = _to_float(rec.get("energy"))
-            if e_min is not None and (energy_val is None or energy_val < e_min):
-                continue
-            if e_max is not None and (energy_val is None or energy_val > e_max):
-                continue
+            energy_val = _normalize_energy_label(rec.get("energy"))
+            if use_energy and e_min is not None and (
+                energy_val is None or ENERGY_INDEX.get(energy_val, -1) < ENERGY_INDEX[e_min]
+            ):
+                return False
+            if use_energy and e_max is not None and (
+                energy_val is None or ENERGY_INDEX.get(energy_val, 10) > ENERGY_INDEX[e_max]
+            ):
+                return False
 
             bpm_val = _to_float(rec.get("bpm"))
-            if b_min is not None and (bpm_val is None or bpm_val < b_min):
-                continue
-            if b_max is not None and (bpm_val is None or bpm_val > b_max):
-                continue
+            if use_bpm and b_min is not None and (bpm_val is None or bpm_val < b_min):
+                return False
+            if use_bpm and b_max is not None and (bpm_val is None or bpm_val > b_max):
+                return False
 
-            if must_exclude and any(token in text for token in must_exclude):
-                continue
+            if use_exclude and must_exclude and any(token in text for token in must_exclude):
+                return False
 
-            if must_include and not any(token in text for token in must_include):
-                continue
+            if use_include and must_include and not any(token in text for token in must_include):
+                return False
 
-            filtered.append(rec)
+            return True
 
-            if limit is not None and len(filtered) >= limit:
-                break
+        def _collect(**kwargs: Any) -> List[Dict[str, Any]]:
+            out: List[Dict[str, Any]] = []
+            for rec in norm_records:
+                if _passes(rec, **kwargs):
+                    out.append(rec)
+                    if limit is not None and len(out) >= limit:
+                        break
+            return out
+
+        filtered: List[Dict[str, Any]] = _collect()
+        relaxation_note = "Strict filtering applied from parsed constraints."
+
+        # Progressive fallback: if strict match is empty, relax constraints in priority order.
+        if not filtered:
+            filtered = _collect(use_include=False)
+            if filtered:
+                relaxation_note = "No exact match found; relaxed must_include constraint."
+        if not filtered:
+            filtered = _collect(use_include=False, use_year=False)
+            if filtered:
+                relaxation_note = "No exact match found; relaxed must_include and year constraints."
+        if not filtered:
+            filtered = _collect(use_include=False, use_year=False, use_energy=False, use_bpm=False)
+            if filtered:
+                relaxation_note = "No exact match found; relaxed include, year, energy, and bpm constraints."
+        if not filtered:
+            filtered = _collect(
+                use_include=False,
+                use_year=False,
+                use_energy=False,
+                use_bpm=False,
+                use_genre=False,
+            )
+            if filtered:
+                relaxation_note = "No exact match found; returned next-best options with only exclusions enforced."
 
         filtered = _dedupe_by_track_artist(filtered)
 
         # Keep output fields aligned with selected_fields when available
-        default_fields = ["Trackname", "Artist", "Album", "Year", "Genre", "energy"]
+        default_fields = ["Trackname", "Artist", "Album", "Year", "Genre", "energy", "Filepath"]
         output_fields = [f for f in selected_fields if isinstance(f, str)] or default_fields
-        for field in ["Trackname", "Artist", "Album"]:
+        for field in ["Trackname", "Artist", "Album", "Filepath"]:
             if field not in output_fields:
                 output_fields.append(field)
 
@@ -445,7 +653,7 @@ class FilterDatasetTool(BaseTool):
             },
             "candidate_count": len(candidate_tracks),
             "candidate_tracks": candidate_tracks,
-            "notes": "Strict filtering applied from parsed constraints.",
+            "notes": relaxation_note,
         }
         return json.dumps(out)
 
@@ -455,10 +663,10 @@ class FilterDatasetTool(BaseTool):
 # -------------------------
 
 class AnalyzeRelevantDataInput(BaseModel):
-    filtered_dataset_json: str = Field(
+    filtered_dataset_json: Any = Field(
         ..., description="JSON output from filter_dataset task/tool."
     )
-    query_intake_json: Optional[str] = Field(
+    query_intake_json: Optional[Any] = Field(
         None,
         description="Optional JSON output from query_intake to compare objective fit.",
     )
@@ -471,7 +679,7 @@ class AnalyzeRelevantDataTool(BaseTool):
     )
     args_schema: Type[BaseModel] = AnalyzeRelevantDataInput
 
-    def _run(self, filtered_dataset_json: str, query_intake_json: Optional[str] = None) -> str:
+    def _run(self, filtered_dataset_json: Any, query_intake_json: Optional[Any] = None) -> str:
         filtered_obj = _safe_json_loads(filtered_dataset_json, fallback={})
         intake = _safe_json_loads(query_intake_json, fallback={}) if query_intake_json else {}
 
@@ -481,8 +689,7 @@ class AnalyzeRelevantDataTool(BaseTool):
 
         genre_counts = Counter()
         year_counts = Counter()
-        energy_counts = {"low": 0, "mid": 0, "high": 0}
-        energies: List[float] = []
+        energy_tag_counts = Counter()
 
         for rec in tracks:
             genre = str(rec.get("Genre", "")).strip()
@@ -493,15 +700,9 @@ class AnalyzeRelevantDataTool(BaseTool):
             if year is not None:
                 year_counts[str(year)] += 1
 
-            e = _to_float(rec.get("energy"))
-            if e is not None:
-                energies.append(e)
-                if e < 0.34:
-                    energy_counts["low"] += 1
-                elif e <= 0.66:
-                    energy_counts["mid"] += 1
-                else:
-                    energy_counts["high"] += 1
+            e_tag = _normalize_energy_label(rec.get("energy"))
+            if e_tag is not None:
+                energy_tag_counts[e_tag] += 1
 
         insights: List[str] = []
         if tracks:
@@ -509,9 +710,9 @@ class AnalyzeRelevantDataTool(BaseTool):
         if genre_counts:
             top_genre, top_count = genre_counts.most_common(1)[0]
             insights.append(f"Most represented genre is {top_genre} ({top_count} tracks).")
-        if energies:
-            avg_energy = sum(energies) / len(energies)
-            insights.append(f"Average candidate energy is {avg_energy:.2f}.")
+        if energy_tag_counts:
+            top_energy, top_count = energy_tag_counts.most_common(1)[0]
+            insights.append(f"Most represented energy tag is {top_energy} ({top_count} tracks).")
 
         gaps: List[str] = []
         constraints = intake.get("constraints", {}) if isinstance(intake, dict) else {}
@@ -534,7 +735,7 @@ class AnalyzeRelevantDataTool(BaseTool):
             "distribution": {
                 "genres": dict(genre_counts),
                 "years": dict(year_counts),
-                "energy": energy_counts,
+                "energy": dict(energy_tag_counts),
             },
             "gaps_vs_objectives": gaps,
             "curation_guidance": guidance,
@@ -547,9 +748,9 @@ class AnalyzeRelevantDataTool(BaseTool):
 # -------------------------
 
 class CuratePlaylistInput(BaseModel):
-    query_intake_json: str = Field(..., description="JSON output from query_intake.")
-    filtered_dataset_json: str = Field(..., description="JSON output from filter_dataset.")
-    analysis_json: Optional[str] = Field(
+    query_intake_json: Any = Field(..., description="JSON output from query_intake.")
+    filtered_dataset_json: Any = Field(..., description="JSON output from filter_dataset.")
+    analysis_json: Optional[Any] = Field(
         None,
         description="Optional JSON output from analyze_relevant_data.",
     )
@@ -564,9 +765,9 @@ class CuratePlaylistTool(BaseTool):
 
     def _run(
         self,
-        query_intake_json: str,
-        filtered_dataset_json: str,
-        analysis_json: Optional[str] = None,
+        query_intake_json: Any,
+        filtered_dataset_json: Any,
+        analysis_json: Optional[Any] = None,
     ) -> str:
         intake = _safe_json_loads(query_intake_json, fallback={})
         filtered = _safe_json_loads(filtered_dataset_json, fallback={})
@@ -623,6 +824,7 @@ class CuratePlaylistTool(BaseTool):
                     "Year": rec.get("Year"),
                     "Genre": rec.get("Genre"),
                     "energy": rec.get("energy"),
+                    "Filepath": rec.get("Filepath"),
                     "why_selected": "Matches constraints and supports playlist flow.",
                 }
             )

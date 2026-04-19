@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import sys
 import warnings
-import json
+import os
+from pathlib import Path
 
 from datetime import datetime
 
@@ -14,6 +15,38 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 # Replace with inputs you want to test with, it will automatically
 # interpolate any tasks and agents information
 
+DB_PATH = "/Users/lukeofthehill/repos/silly-things/shrq_radio/shrq_radio/dj_agent/shrq_dj/mp3_dataset.json"
+
+
+def _load_env_file() -> None:
+    env_path = None
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / ".env"
+        if candidate.exists():
+            env_path = candidate
+            break
+    if env_path is None:
+        return
+
+    for raw_line in env_path.read_text().splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip("'\"")
+        if key and value and key not in os.environ:
+            os.environ[key] = value
+
+
+def _build_inputs(user_query: str) -> dict:
+    return {
+        "db_path": DB_PATH,
+        "db_summary": f"Dataset path: {DB_PATH}",
+        "query": user_query,
+        "prompt": user_query,
+    }
+
 def run():
     """
     Run the crew.
@@ -22,42 +55,14 @@ def run():
     # if len(sys.argv) < 2:
     #     raise ValueError("Please provide the path to the JSON db file as the first argument, e.g. `python main.py mp3_rag_db.json`.")
 
-    db_path = "/Users/lukeofthehill/repos/silly-things/shrq_radio/shrq_radio/dj_agent/shrq_dj/mp3_dataset.json"
-
-    # Load JSON and convert to a pandas DataFrame
-    with open(db_path, "r") as f:
-        raw_db = json.load(f)
-    
-    rename_map = {
-    'TIT2': "Trackname",
-    'TPE1': "Artist",
-    'TALB': "Album",
-    'TDRC': "Year",
-    'TCON': "Genre",
-    "TXXX:energy": "energy"
-    }
-
-# Rename keys inside every dict in the list
-    raw_db = [
-        {rename_map.get(k, k): v for k, v in item.items()}
-        for item in raw_db
-    ]
-
-    # Ensure we have a records-oriented structure; assume the JSON is already a list of dicts
-    if isinstance(raw_db, list):
-        db_records = raw_db
-    else:
-        db_records = [raw_db]
-
+    _load_env_file()
+    if not os.getenv("OPENAI_API_KEY"):
+        raise ValueError("OPENAI_API_KEY is not set. Add it to your project .env file.")
+    os.environ["SHRQ_DB_PATH"] = DB_PATH
 
     user_query = input("What should the playlist consist of? ")
 
-    # Pass a records-oriented representation to the agents so they can analyze the dataset
-    inputs = {
-        "db": db_records,
-        "query": user_query,
-        "prompt": user_query,
-    }
+    inputs = _build_inputs(user_query)
     
     try:
         ShrqDj().crew().kickoff(inputs=inputs)
@@ -69,37 +74,14 @@ def train():
     """
     Train the crew for a given number of iterations.
     """
-    db_path = "/Users/lukeofthehill/repos/silly-things/shrq_radio/shrq_radio/dj_agent/shrq_dj/mp3_dataset.json"
-
-    with open(db_path, "r") as f:
-        raw_db = json.load(f)
-    rename_map = {
-    'TIT2': "Trackname",
-    'TPE1': "Artist",
-    'TALB': "Album",
-    'TDRC': "Year",
-    'TCON': "Genre",
-    "TXXX:energy": "energy"
-    }
-
-# Rename keys inside every dict in the list
-    raw_db = [
-        {rename_map.get(k, k): v for k, v in item.items()}
-        for item in raw_db
-    ]
-
-    if isinstance(raw_db, list):
-        db_records = raw_db
-    else:
-        db_records = [raw_db]
+    _load_env_file()
+    if not os.getenv("OPENAI_API_KEY"):
+        raise ValueError("OPENAI_API_KEY is not set. Add it to your project .env file.")
+    os.environ["SHRQ_DB_PATH"] = DB_PATH
 
     user_query = input("What should the playlist consist of? ")
 
-    inputs = {
-        "db": db_records,
-        "query": user_query,
-        "prompt": user_query,
-    }
+    inputs = _build_inputs(user_query)
     try:
         ShrqDj().crew().train(n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs)
 
@@ -120,37 +102,14 @@ def test():
     """
     Test the crew execution and returns the results.
     """
-    db_path = "/Users/lukeofthehill/repos/silly-things/shrq_radio/shrq_radio/dj_agent/shrq_dj/mp3_dataset.json"
-
-    with open(db_path, "r") as f:
-        raw_db = json.load(f)
-    rename_map = {
-    'TIT2': "Trackname",
-    'TPE1': "Artist",
-    'TALB': "Album",
-    'TDRC': "Year",
-    'TCON': "Genre",
-    "TXXX:energy": "energy"
-    }
-
-# Rename keys inside every dict in the list
-    raw_db = [
-        {rename_map.get(k, k): v for k, v in item.items()}
-        for item in raw_db
-    ]
-
-    if isinstance(raw_db, list):
-        db_records = raw_db
-    else:
-        db_records = [raw_db]
+    _load_env_file()
+    if not os.getenv("OPENAI_API_KEY"):
+        raise ValueError("OPENAI_API_KEY is not set. Add it to your project .env file.")
+    os.environ["SHRQ_DB_PATH"] = DB_PATH
 
     user_query = input("What should the playlist consist of? ")
 
-    inputs = {
-        "db": db_records,
-        "query": user_query,
-        "prompt": user_query,
-    }
+    inputs = _build_inputs(user_query)
     
     try:
         ShrqDj().crew().test(n_iterations=int(sys.argv[1]), eval_llm=sys.argv[2], inputs=inputs)

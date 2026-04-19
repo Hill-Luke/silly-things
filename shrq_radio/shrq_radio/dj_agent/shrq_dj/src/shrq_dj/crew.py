@@ -3,6 +3,7 @@ from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
+import os
 from shrq_dj.tools.custom_tool import (
     QueryIntakeTool,
     SelectRelevantFieldsTool,
@@ -20,6 +21,7 @@ class ShrqDj():
 
     agents: List[BaseAgent]
     tasks: List[Task]
+    llm_model: str = os.getenv("OPENAI_MODEL", "openai/gpt-4o-mini")
 
     # Learn more about YAML configuration files here:
     # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
@@ -37,6 +39,7 @@ class ShrqDj():
                 FilterDatasetTool(),
                 AnalyzeRelevantDataTool(),
             ],
+            llm=self.llm_model,
             verbose=True,
         )
 
@@ -45,6 +48,7 @@ class ShrqDj():
         return Agent(
             config=self.agents_config['disc_jockey'], # type: ignore[index]
             tools=[CuratePlaylistTool()],
+            llm=self.llm_model,
             verbose=True
         )
 
