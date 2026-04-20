@@ -7,28 +7,45 @@ import soundfile as sf
 from mutagen.id3 import ID3, ID3NoHeaderError, TXXX
 
 
-def classify_tempo(bpm: float) -> str:
-    if bpm < 90:
-        return "low"
-    if bpm < 120:
-        return "medium"
-    return "high"
+def _clamp_score(value: float) -> int:
+    return int(max(1, min(100, round(value))))
 
 
-def classify_waveform(rms: np.ndarray, lufs: float) -> str:
-    """Classify overall waveform energy using RMS + LUFS."""
-    loudness_score = max(0.0, 100.0 + float(lufs))
-    rms_score = float(np.mean(rms)) * 1000.0
-    avg_energy = (loudness_score + rms_score) / 2.0
+def score_tempo(bpm: float) -> int:
+    """Map tempo to a 1-100 energy contribution."""
+    if bpm <= 0:
+        return 1
 
-    if avg_energy < 60:
-        return "low"
-    if avg_energy < 80:
-        return "medium"
-    return "high"
+    min_bpm = 60.0
+    max_bpm = 200.0
+    normalized = (float(bpm) - min_bpm) / (max_bpm - min_bpm)
+    return _clamp_score((max(0.0, min(1.0, normalized)) * 99.0) + 1.0)
 
 
-def add_energy_tag(mp3_path: str, energy_value: str) -> None:
+def score_waveform(rms: np.ndarray, lufs: float) -> int:
+    """Map loudness and RMS to a 1-100 energy contribution."""
+    rms_mean = float(np.mean(rms)) if rms.size else 0.0
+
+    # Typical integrated loudness for music is roughly -40 LUFS (very quiet)
+    # up to -10 LUFS (very loud).
+    loudness_norm = (float(lufs) - (-40.0)) / 30.0
+    loudness_score = (max(0.0, min(1.0, loudness_norm)) * 99.0) + 1.0
+
+    # RMS around ~0.35 is very strong for normalized audio.
+    rms_norm = rms_mean / 0.35
+    rms_score = (max(0.0, min(1.0, rms_norm)) * 99.0) + 1.0
+
+    return _clamp_score((0.6 * loudness_score) + (0.4 * rms_score))
+
+
+def compute_energy_score(tempo_bpm: float, rms: np.ndarray, lufs: float) -> int:
+    """Compute a final 1-100 energy score."""
+    tempo_score = score_tempo(tempo_bpm)
+    waveform_score = score_waveform(rms, lufs)
+    return _clamp_score((0.45 * tempo_score) + (0.55 * waveform_score))
+
+
+def add_energy_tag(mp3_path: str, energy_value: int) -> None:
     try:
         audio = ID3(mp3_path)
     except ID3NoHeaderError:
@@ -38,10 +55,10 @@ def add_energy_tag(mp3_path: str, energy_value: str) -> None:
         if key.startswith("TXXX:energy"):
             del audio[key]
 
-    audio.add(TXXX(encoding=3, desc="energy", text=energy_value))
+    audio.add(TXXX(encoding=3, desc="energy", text=str(energy_value)))
     audio.save(mp3_path)
 
-    print(f"✅ Energy tag added as TXXX:energy = {energy_value}")
+    print(f"✅ Energy tag added as TXXX:energy = {energy_value} (1-100)")
 
 
 def _to_mono_float32(y: np.ndarray) -> np.ndarray:
@@ -149,8 +166,6 @@ def analyze_mp3(filepath: str) -> None:
     y = _to_mono_float32(y)
 
     tempo_value = _estimate_tempo(y, sr)
-    tempo_class = classify_tempo(tempo_value)
-
     rms = _frame_rms(y)
     meter = pyln.Meter(sr)
 
@@ -159,14 +174,14 @@ def analyze_mp3(filepath: str) -> None:
     except Exception:
         lufs = -70.0
 
-    waveform_class = classify_waveform(rms, lufs)
+    tempo_score = score_tempo(tempo_value)
+    waveform_score = score_waveform(rms, lufs)
+    energy_score = compute_energy_score(tempo_value, rms, lufs)
+    print(f"🎚 Tempo: {tempo_value:.2f} BPM (score: {tempo_score})")
+    print(f"🔊 LUFS: {lufs:.2f}, RMS avg: {float(np.mean(rms)):.4f} (score: {waveform_score})")
+    print(f"⚡ Combined energy score: {energy_score}/100")
 
-    energy_tag = f"{tempo_class}_{waveform_class}"
-    print(f"🎚 Tempo: {tempo_value:.2f} BPM ({tempo_class})")
-    print(f"🔊 LUFS: {lufs:.2f}, RMS avg: {float(np.mean(rms)):.4f} ({waveform_class})")
-    print(f"⚡ Combined energy classification: {energy_tag}")
-
-    add_energy_tag(filepath, energy_tag)
+    add_energy_tag(filepath, energy_score)
 
 
 if __name__ == "__main__":

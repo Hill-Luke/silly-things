@@ -1,7 +1,7 @@
 import subprocess
 from pathlib import Path
 from tqdm import tqdm
-from mutagen.id3 import ID3
+from mutagen.id3 import ID3, ID3NoHeaderError
 from mutagen.easyid3 import EasyID3
 # Ask for folder path
 folder_path = Path(input('Input the filepath with your music: ').strip().strip('"').strip("'"))
@@ -39,12 +39,17 @@ filepaths = [str(p) for p in folder_path.iterdir() if p.is_file()]
 #     else:
 #         print("No energy tag found.")
 def read_energy_tag(mp3_path):
-    """Reads the custom 'energy' tag from an MP3 file."""
+    """Reads the custom numeric 'energy' tag (1-100) from an MP3 file."""
     try:
         audio = ID3(mp3_path)
         for key, frame in audio.items():
             if key.startswith("TXXX:energy"):
-                return frame.text[0]
+                raw_value = frame.text[0]
+                try:
+                    value = int(float(raw_value))
+                except (TypeError, ValueError):
+                    return None
+                return max(1, min(100, value))
     except ID3NoHeaderError:
         return None
     return None
@@ -55,7 +60,7 @@ def extract_metadata(file_path):
         "title": "Unknown",
         "artist": "Unknown",
         "album": "Unknown",
-        "energy": "Unknown"
+        "energy": None
     }
 
     try:

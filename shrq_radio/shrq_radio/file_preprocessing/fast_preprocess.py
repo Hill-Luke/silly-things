@@ -34,6 +34,17 @@ TIMEOUT_SECONDS = 60
 ENABLE_ENERGY_ANALYSIS = True
 
 
+def parse_energy_value(raw_value):
+    """Normalize energy values to an int in [1, 100], else return None."""
+    if raw_value is None:
+        return None
+    try:
+        value = int(float(str(raw_value).strip()))
+    except (TypeError, ValueError):
+        return None
+    return max(1, min(100, value))
+
+
 def frame_text(frame):
     if frame is None:
         return None
@@ -141,13 +152,22 @@ def pre_process_mp3(path_str: str):
         # Custom 'energy' tag stored in a TXXX frame with desc="energy"
         # Note: we deliberately never backfill or overwrite this from MusicBrainz.
         energy = None
-        for key, frame in tags.items():
+        removed_invalid_energy = False
+        for key, frame in list(tags.items()):
             if key.startswith("TXXX:") and getattr(frame, "desc", "").lower() == "energy":
                 value = getattr(frame, "text", None)
                 if isinstance(value, list) and value:
-                    energy = str(value[0])
+                    parsed_energy = parse_energy_value(value[0])
                 else:
-                    energy = str(frame)
+                    parsed_energy = parse_energy_value(frame)
+
+                if parsed_energy is None:
+                    # Clean up old non-numeric energy tags.
+                    del tags[key]
+                    removed_invalid_energy = True
+                    continue
+
+                energy = parsed_energy
                 break
 
         # Keep originals to decide whether anything changed
@@ -160,6 +180,9 @@ def pre_process_mp3(path_str: str):
 
         # If anything changed, update ID3 tags and save
         updated = False
+        if removed_invalid_energy:
+            updated = True
+            print(f"[Cleaned tags] Removed non-numeric energy tag(s) from {i}")
 
         if artist and artist != orig_artist:
             tags.setall("TPE1", [TPE1(encoding=3, text=artist)])
@@ -191,7 +214,7 @@ def pre_process_mp3(path_str: str):
         print(f"  Genre:  {genre or 'N/A'}")
         print(f"  Album:  {album or 'N/A'}")
         print(f"  Year:   {year or 'N/A'}")
-        print(f"  Energy: {energy or 'N/A'}")
+        print(f"  Energy: {energy if energy is not None else 'N/A'}")
 
     except Exception as e:
         tb = traceback.format_exc()
