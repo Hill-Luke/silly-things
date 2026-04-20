@@ -48,17 +48,8 @@ KNOWN_GENRES = [
     "punk", "classical", "latin", "reggaeton", "soul", "funk", "disco", "lofi",
 ]
 
-ENERGY_CADENCE = [
-    "low_low",
-    "medium_low",
-    "high_low",
-    "medium_medium",
-    "medium_high",
-    "high_medium",
-    "high_high"
-]
-
-ENERGY_INDEX = {label: idx for idx, label in enumerate(ENERGY_CADENCE)}
+ENERGY_MIN = 1
+ENERGY_MAX = 100
 
 
 def _safe_json_loads(value: Any, fallback: Any) -> Any:
@@ -223,67 +214,114 @@ def _extract_track_count(query: str) -> Optional[int]:
     return None
 
 
-def _extract_energy_range(query: str) -> Tuple[Optional[str], Optional[str]]:
+def _clamp_energy(value: int) -> int:
+    return max(ENERGY_MIN, min(ENERGY_MAX, int(value)))
+
+
+def _extract_energy_range(query: str) -> Tuple[Optional[int], Optional[int]]:
     q = query.lower()
+
+    # Numeric forms: "energy between 30 and 60", "30-60 energy"
+    range_match = re.search(
+        r"\benergy(?:\s+level)?\s*(?:between\s*)?(\d{1,3})\s*(?:-|–|—|to|and)\s*(\d{1,3})\b",
+        q,
+    )
+    if not range_match:
+        range_match = re.search(
+            r"\b(\d{1,3})\s*(?:-|–|—|to)\s*(\d{1,3})\s*(?:energy|energy level)\b",
+            q,
+        )
+    if range_match:
+        a = _clamp_energy(int(range_match.group(1)))
+        b = _clamp_energy(int(range_match.group(2)))
+        return min(a, b), max(a, b)
+
+    min_match = re.search(
+        r"\b(?:energy(?:\s+level)?\s*)?(?:above|over|min(?:imum)?|at least)\s*(\d{1,3})\s*(?:energy)?\b",
+        q,
+    )
+    max_match = re.search(
+        r"\b(?:energy(?:\s+level)?\s*)?(?:below|under|max(?:imum)?|at most)\s*(\d{1,3})\s*(?:energy)?\b",
+        q,
+    )
+    if min_match or max_match:
+        e_min = _clamp_energy(int(min_match.group(1))) if min_match else None
+        e_max = _clamp_energy(int(max_match.group(1))) if max_match else None
+        return e_min, e_max
+
     if any(word in q for word in ["very low energy", "super chill", "sleep"]):
-        return "low_low", "medium_low"
+        return 1, 30
     if any(word in q for word in ["chill", "calm", "ambient", "soft", "relax"]):
-        return "medium_low", "high_low"
+        return 20, 45
     if any(word in q for word in ["mid energy", "moderate", "balanced"]):
-        return "high_low", "medium_high"
+        return 40, 65
     if any(word in q for word in ["high energy", "energetic", "hype", "workout", "intense"]):
-        return "medium_high", "high_high"
+        return 65, 100
     return None, None
 
 
-def _normalize_energy_label(value: Any) -> Optional[str]:
+def _normalize_energy_value(value: Any) -> Optional[int]:
     if value is None:
         return None
 
-    # Allow legacy numeric energies and map to tag cadence.
     as_float = _to_float(value)
     if as_float is not None:
-        if as_float < 0.14:
-            return "low_low"
-        if as_float < 0.28:
-            return "medium_low"
-        if as_float < 0.42:
-            return "high_low"
-        if as_float < 0.56:
-            return "medium_medium"
-        if as_float < 0.70:
-            return "medium_high"
-        if as_float < 0.84:
-            return "high_medium"
-        return "high_high"
+        # Backward compatibility for old normalized energy values in [0, 1].
+        if 0.0 <= as_float <= 1.0:
+            return _clamp_energy(int(round((as_float * 99.0) + 1.0)))
+        as_int = _to_int(as_float)
+        if as_int is not None:
+            return _clamp_energy(as_int)
+
+    as_int = _coerce_int(value)
+    if as_int is not None:
+        return _clamp_energy(as_int)
 
     label = str(value).strip().lower().replace("-", "_").replace(" ", "_")
-    if label in ENERGY_INDEX:
-        return label
-
-    # Common shorthand
+    # Legacy categorical tags mapped to representative numeric values.
     aliases = {
-        "lowlow": "low_low",
-        "low": "low_low",
-        "med_low": "medium_low",
-        "mediumlow": "medium_low",
-        "highlow": "high_low",
-        "high_low": "high_low",
-        "med": "medium_medium",
-        "medium": "medium_medium",
-        "mid": "medium_medium",
-        "mediummedium": "medium_medium",
-        "med_high": "medium_high",
-        "mediumhigh": "medium_high",
-        "highmedium": "high_medium",
-        "highhigh": "high_high",
-        "high": "high_high",
-        "vlow": "low_low",
-        "vhigh": "high_high",
-        "very_low": "low_low",
-        "very_high": "high_high",
+        "low_low": 8,
+        "lowlow": 8,
+        "low": 12,
+        "medium_low": 22,
+        "med_low": 22,
+        "mediumlow": 22,
+        "high_low": 35,
+        "highlow": 35,
+        "medium_medium": 50,
+        "mediummedium": 50,
+        "med": 50,
+        "medium": 50,
+        "mid": 50,
+        "medium_high": 64,
+        "med_high": 64,
+        "mediumhigh": 64,
+        "high_medium": 78,
+        "highmedium": 78,
+        "high_high": 92,
+        "highhigh": 92,
+        "high": 88,
+        "vlow": 6,
+        "vhigh": 96,
+        "very_low": 6,
+        "very_high": 96,
     }
     return aliases.get(label)
+
+
+def _energy_bucket(value: Any) -> Optional[str]:
+    score = _normalize_energy_value(value)
+    if score is None:
+        return None
+    if score <= 20:
+        return "1-20"
+    if score <= 40:
+        return "21-40"
+    if score <= 60:
+        return "41-60"
+    if score <= 80:
+        return "61-80"
+    return "81-100"
 
 
 def _extract_bpm_range(query: str) -> Tuple[Optional[float], Optional[float]]:
@@ -682,17 +720,14 @@ class FilterDatasetTool(BaseTool):
 
         y_min = _to_int(year_range.get("min"))
         y_max = _to_int(year_range.get("max"))
-        e_min = _normalize_energy_label(energy_range.get("min"))
-        e_max = _normalize_energy_label(energy_range.get("max"))
+        e_min = _normalize_energy_value(energy_range.get("min"))
+        e_max = _normalize_energy_value(energy_range.get("max"))
+        if e_min is not None and e_max is not None and e_min > e_max:
+            e_min, e_max = e_max, e_min
         b_min = _to_float(bpm_range.get("min"))
         b_max = _to_float(bpm_range.get("max"))
 
         norm_records = _normalize_records(records_source)
-
-        # Safely map energy labels to indices for comparisons. Use None to indicate
-        # an unavailable bound so we can skip that check without raising KeyError.
-        e_min_idx = ENERGY_INDEX.get(e_min) if isinstance(e_min, str) else None
-        e_max_idx = ENERGY_INDEX.get(e_max) if isinstance(e_max, str) else None
 
         def _passes(
             rec: Dict[str, Any],
@@ -716,13 +751,12 @@ class FilterDatasetTool(BaseTool):
             if use_year and y_max is not None and (year_val is None or year_val > y_max):
                 return False
 
-            energy_val = _normalize_energy_label(rec.get("energy"))
-            energy_idx = ENERGY_INDEX.get(energy_val) if isinstance(energy_val, str) else None
-            if use_energy and e_min_idx is not None:
-                if energy_idx is None or energy_idx < e_min_idx:
+            energy_val = _normalize_energy_value(rec.get("energy"))
+            if use_energy and e_min is not None:
+                if energy_val is None or energy_val < e_min:
                     return False
-            if use_energy and e_max_idx is not None:
-                if energy_idx is None or energy_idx > e_max_idx:
+            if use_energy and e_max is not None:
+                if energy_val is None or energy_val > e_max:
                     return False
 
             bpm_val = _to_float(rec.get("bpm"))
@@ -793,10 +827,12 @@ class FilterDatasetTool(BaseTool):
             if field not in output_fields:
                 output_fields.append(field)
 
-        candidate_tracks = [
-            {k: rec.get(k) for k in output_fields}
-            for rec in filtered
-        ]
+        candidate_tracks = []
+        for rec in filtered:
+            row = {k: rec.get(k) for k in output_fields}
+            if "energy" in row:
+                row["energy"] = _normalize_energy_value(row.get("energy"))
+            candidate_tracks.append(row)
         final_limit = max(10, _coerce_int(limit) or 120)
         if len(candidate_tracks) > final_limit:
             candidate_tracks = random.sample(candidate_tracks, final_limit)
@@ -853,7 +889,7 @@ class AnalyzeRelevantDataTool(BaseTool):
 
         genre_counts = Counter()
         year_counts = Counter()
-        energy_tag_counts = Counter()
+        energy_bucket_counts = Counter()
 
         for rec in tracks:
             genre = str(rec.get("Genre", "")).strip()
@@ -864,9 +900,9 @@ class AnalyzeRelevantDataTool(BaseTool):
             if year is not None:
                 year_counts[str(year)] += 1
 
-            e_tag = _normalize_energy_label(rec.get("energy"))
-            if e_tag is not None:
-                energy_tag_counts[e_tag] += 1
+            e_bucket = _energy_bucket(rec.get("energy"))
+            if e_bucket is not None:
+                energy_bucket_counts[e_bucket] += 1
 
         insights: List[str] = []
         if tracks:
@@ -874,9 +910,9 @@ class AnalyzeRelevantDataTool(BaseTool):
         if genre_counts:
             top_genre, top_count = genre_counts.most_common(1)[0]
             insights.append(f"Most represented genre is {top_genre} ({top_count} tracks).")
-        if energy_tag_counts:
-            top_energy, top_count = energy_tag_counts.most_common(1)[0]
-            insights.append(f"Most represented energy tag is {top_energy} ({top_count} tracks).")
+        if energy_bucket_counts:
+            top_energy, top_count = energy_bucket_counts.most_common(1)[0]
+            insights.append(f"Most represented energy bucket is {top_energy} ({top_count} tracks).")
 
         gaps: List[str] = []
         constraints = intake.get("constraints", {}) if isinstance(intake, dict) else {}
@@ -899,7 +935,7 @@ class AnalyzeRelevantDataTool(BaseTool):
             "distribution": {
                 "genres": dict(genre_counts),
                 "years": dict(year_counts),
-                "energy": dict(energy_tag_counts),
+                "energy": dict(energy_bucket_counts),
             },
             "gaps_vs_objectives": gaps,
             "curation_guidance": guidance,
@@ -987,7 +1023,7 @@ class CuratePlaylistTool(BaseTool):
                     "Album": rec.get("Album"),
                     "Year": rec.get("Year"),
                     "Genre": rec.get("Genre"),
-                    "energy": rec.get("energy"),
+                    "energy": _normalize_energy_value(rec.get("energy")),
                     "Filepath": rec.get("Filepath"),
                     "why_selected": "Matches constraints and supports playlist flow.",
                 }

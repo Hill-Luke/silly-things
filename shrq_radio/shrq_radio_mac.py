@@ -10,7 +10,7 @@ from pathlib import Path
 from datetime import datetime, time
 from pydub.utils import which
 from mutagen.mp3 import MP3
-from mutagen.id3 import ID3
+from mutagen.id3 import ID3, ID3NoHeaderError
 from mutagen.easyid3 import EasyID3
 import edge_tts
 import pygame
@@ -195,12 +195,17 @@ async def synthesize_and_save(text, out_path):
 # Extract MP3 metadata
 # ------------------------
 def read_energy_tag(mp3_path):
-    """Reads the custom 'energy' tag from an MP3 file."""
+    """Reads numeric energy (1-100) from a custom ID3 energy tag."""
     try:
         audio = ID3(mp3_path)
         for key, frame in audio.items():
             if key.startswith("TXXX:energy"):
-                return frame.text[0]
+                raw = frame.text[0]
+                try:
+                    value = int(float(str(raw).strip()))
+                except (TypeError, ValueError):
+                    return None
+                return max(1, min(100, value))
     except ID3NoHeaderError:
         return None
     return None
@@ -211,7 +216,7 @@ def extract_metadata(file_path):
         "title": "Unknown",
         "artist": "Unknown",
         "album": "Unknown",
-        "energy": "Unknown"
+        "energy": None
     }
 
     try:
@@ -223,7 +228,7 @@ def extract_metadata(file_path):
         pass  # Not all files will have EasyID3 tags
 
     energy = read_energy_tag(file_path)
-    if energy:
+    if energy is not None:
         file["energy"] = energy
 
     return file
@@ -320,11 +325,11 @@ async def main():
 
     current_time = datetime.now().time()
     if current_time <= time(9, 0, 0):
-        playlist_prompt = "thirty songs with low-medium, medium-low, or low-low energy, suitable for a calm morning radio show."
+        playlist_prompt = "thirty songs with energy between 20 and 55, suitable for a calm morning radio show."
     elif time(9, 0, 0) < current_time < time(18, 0, 0):
-        playlist_prompt = "thirty songs with a mix of energy levels, suitable for a daytime radio show."
+        playlist_prompt = "thirty songs with a mix of energy levels from 25 to 85, suitable for a daytime radio show."
     else:
-        playlist_prompt = "thirty songs with low-medium, medium-medium, or medium-low energy, suitable for a relaxed evening radio show."
+        playlist_prompt = "thirty songs with energy between 30 and 65, suitable for a relaxed evening radio show."
 
     playlist = build_playlist_from_crew(playlist_prompt)
     if not playlist:
