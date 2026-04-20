@@ -2,6 +2,7 @@ from typing import Type, List, Dict, Any, Optional, Tuple
 
 import json
 import os
+import random
 import re
 import sys
 from collections import Counter
@@ -418,10 +419,10 @@ def _load_records_from_path(db_path: str) -> List[Dict[str, Any]]:
 # -------------------------
 
 class QueryIntakeInput(BaseModel):
-    query: Optional[Any] = Field(None, description="Raw user query requesting playlist curation.")
-    prompt: Optional[Any] = Field(None, description="Alias for query.")
-    user_query: Optional[Any] = Field(None, description="Alias for query.")
-    request: Optional[Any] = Field(None, description="Alias for query.")
+    query: str = Field("", description="Raw user query requesting playlist curation.")
+    prompt: str = Field("", description="Alias for query.")
+    user_query: str = Field("", description="Alias for query.")
+    request: str = Field("", description="Alias for query.")
 
 
 class QueryIntakeTool(BaseTool):
@@ -434,10 +435,10 @@ class QueryIntakeTool(BaseTool):
 
     def _run(
         self,
-        query: Optional[Any] = None,
-        prompt: Optional[Any] = None,
-        user_query: Optional[Any] = None,
-        request: Optional[Any] = None,
+        query: str = "",
+        prompt: str = "",
+        user_query: str = "",
+        request: str = "",
     ) -> str:
         raw = query if query not in (None, "") else prompt
         if raw in (None, ""):
@@ -508,16 +509,16 @@ class QueryIntakeTool(BaseTool):
 # -------------------------
 
 class SelectRelevantFieldsInput(BaseModel):
-    query_intake_json: Any = Field(
-        ..., description="JSON output from query_intake task/tool."
+    query_intake_json: str = Field(
+        ..., description="JSON string output from query_intake task/tool."
     )
-    records: Optional[Any] = Field(
-        None,
-        description="Optional dataset records as list-of-dicts or JSON string.",
+    records: str = Field(
+        "",
+        description="Optional dataset records as a JSON string.",
     )
-    db: Optional[Any] = Field(
-        None,
-        description="Alias for records; accepts list-of-dicts or JSON string.",
+    db: str = Field(
+        "",
+        description="Alias for records; accepts a JSON string.",
     )
 
 
@@ -530,9 +531,9 @@ class SelectRelevantFieldsTool(BaseTool):
 
     def _run(
         self,
-        query_intake_json: Any,
-        records: Optional[Any] = None,
-        db: Optional[Any] = None,
+        query_intake_json: str,
+        records: str = "",
+        db: str = "",
     ) -> str:
         source_records = _safe_json_loads(records, fallback=records)
         if not isinstance(source_records, list):
@@ -606,26 +607,30 @@ class SelectRelevantFieldsTool(BaseTool):
 # -------------------------
 
 class FilterDatasetInput(BaseModel):
-    records: Optional[Any] = Field(
-        None,
-        description="Full dataset records as a list of dicts or a JSON string.",
+    records: str = Field(
+        "",
+        description="Full dataset records as a JSON string.",
     )
-    db: Optional[Any] = Field(
-        None,
-        description="Alias for records; accepts list-of-dicts or JSON string.",
+    db: str = Field(
+        "",
+        description="Alias for records; accepts a JSON string.",
     )
-    db_path: Optional[str] = Field(
-        None,
+    db_path: str = Field(
+        "",
         description="Path to dataset JSON file. Used when records are not passed directly.",
     )
-    query_intake_json: Any = Field(..., description="JSON output from query_intake.")
-    selected_fields_json: Optional[Any] = Field(
-        None,
-        description="JSON output from select_relevant_fields.",
+    query_intake_json: str = Field(..., description="JSON string output from query_intake.")
+    selected_fields_json: str = Field(
+        "",
+        description="JSON string output from select_relevant_fields.",
     )
-    limit: Optional[int] = Field(
-        300,
+    limit: int = Field(
+        120,
         description="Maximum number of candidate records to return.",
+    )
+    pre_sample_size: int = Field(
+        400,
+        description="Maximum size of random pre-sampled pool before final output limiting.",
     )
 
 
@@ -638,12 +643,13 @@ class FilterDatasetTool(BaseTool):
 
     def _run(
         self,
-        query_intake_json: Any,
-        records: Optional[Any] = None,
-        db: Optional[Any] = None,
-        db_path: Optional[str] = None,
-        selected_fields_json: Optional[Any] = None,
-        limit: Optional[int] = 300,
+        query_intake_json: str,
+        records: str = "",
+        db: str = "",
+        db_path: str = "",
+        selected_fields_json: str = "",
+        limit: int = 120,
+        pre_sample_size: int = 400,
     ) -> str:
         def _coerce_records(value: Any) -> List[Dict[str, Any]]:
             parsed = _safe_json_loads(value, fallback=value)
@@ -771,6 +777,14 @@ class FilterDatasetTool(BaseTool):
                 relaxation_note = "Returned broader next-best options with only exclusions enforced."
 
         filtered = _dedupe_by_track_artist(filtered)
+        pre_cap = max(50, _coerce_int(pre_sample_size) or 400)
+        if len(filtered) > pre_cap:
+            filtered = random.sample(filtered, pre_cap)
+            relaxation_note = (
+                f"{relaxation_note} Randomly pre-sampled {pre_cap} tracks from a larger valid pool."
+                if relaxation_note
+                else f"Randomly pre-sampled {pre_cap} tracks from a larger valid pool."
+            )
 
         # Keep output fields aligned with selected_fields when available
         default_fields = ["Trackname", "Artist", "Album", "Year", "Genre", "energy", "Filepath"]
@@ -783,6 +797,14 @@ class FilterDatasetTool(BaseTool):
             {k: rec.get(k) for k in output_fields}
             for rec in filtered
         ]
+        final_limit = max(10, _coerce_int(limit) or 120)
+        if len(candidate_tracks) > final_limit:
+            candidate_tracks = random.sample(candidate_tracks, final_limit)
+            relaxation_note = (
+                f"{relaxation_note} Randomly sampled to final limit of {final_limit}."
+                if relaxation_note
+                else f"Randomly sampled to final limit of {final_limit}."
+            )
 
         out = {
             "applied_filters": {
@@ -805,12 +827,12 @@ class FilterDatasetTool(BaseTool):
 # -------------------------
 
 class AnalyzeRelevantDataInput(BaseModel):
-    filtered_dataset_json: Any = Field(
-        ..., description="JSON output from filter_dataset task/tool."
+    filtered_dataset_json: str = Field(
+        ..., description="JSON string output from filter_dataset task/tool."
     )
-    query_intake_json: Optional[Any] = Field(
-        None,
-        description="Optional JSON output from query_intake to compare objective fit.",
+    query_intake_json: str = Field(
+        "",
+        description="Optional JSON string output from query_intake to compare objective fit.",
     )
 
 
@@ -821,7 +843,7 @@ class AnalyzeRelevantDataTool(BaseTool):
     )
     args_schema: Type[BaseModel] = AnalyzeRelevantDataInput
 
-    def _run(self, filtered_dataset_json: Any, query_intake_json: Optional[Any] = None) -> str:
+    def _run(self, filtered_dataset_json: str, query_intake_json: str = "") -> str:
         filtered_obj = _safe_json_loads(filtered_dataset_json, fallback={})
         intake = _safe_json_loads(query_intake_json, fallback={}) if query_intake_json else {}
 
@@ -890,11 +912,11 @@ class AnalyzeRelevantDataTool(BaseTool):
 # -------------------------
 
 class CuratePlaylistInput(BaseModel):
-    query_intake_json: Any = Field(..., description="JSON output from query_intake.")
-    filtered_dataset_json: Any = Field(..., description="JSON output from filter_dataset.")
-    analysis_json: Optional[Any] = Field(
-        None,
-        description="Optional JSON output from analyze_relevant_data.",
+    query_intake_json: str = Field(..., description="JSON string output from query_intake.")
+    filtered_dataset_json: str = Field(..., description="JSON string output from filter_dataset.")
+    analysis_json: str = Field(
+        "",
+        description="Optional JSON string output from analyze_relevant_data.",
     )
 
 
@@ -907,9 +929,9 @@ class CuratePlaylistTool(BaseTool):
 
     def _run(
         self,
-        query_intake_json: Any,
-        filtered_dataset_json: Any,
-        analysis_json: Optional[Any] = None,
+        query_intake_json: str,
+        filtered_dataset_json: str,
+        analysis_json: str = "",
     ) -> str:
         intake = _safe_json_loads(query_intake_json, fallback={})
         filtered = _safe_json_loads(filtered_dataset_json, fallback={})

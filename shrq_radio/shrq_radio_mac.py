@@ -61,9 +61,9 @@ TPR_DIR = BASE_DIR / "data/tpr_local"
 RESPONSES_DIR = BASE_DIR / "data/dj_responses"
 OUTPUT_DIR = BASE_DIR / "output"
 JINGLE_DIR = BASE_DIR / "jingles"
-DJ_AGENT_ROOT = Path("/Users/lukeofthehill/repos/silly-things/shrq_radio/shrq_radio/dj_agent/shrq_dj")
+DJ_AGENT_ROOT = BASE_DIR / "dj_agent" / "shrq_dj"
 DJ_AGENT_SRC = DJ_AGENT_ROOT / "src"
-DJ_DATASET_PATH = DJ_AGENT_ROOT / "mp3_dataset_MAC.json"
+DJ_DATASET_PATH = DJ_AGENT_ROOT / "mp3_dataset.json"
 
 
 NPR_URL = "http://public.npr.org/anon.npr-mp3/npr/news/newscast.mp3?_kip_ipx=1006340484-1748098441"
