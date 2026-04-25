@@ -2,7 +2,6 @@ from typing import Type, List, Dict, Any, Optional, Tuple
 
 import json
 import os
-import random
 import re
 import sys
 from collections import Counter
@@ -23,8 +22,6 @@ KEY_ALIASES = {
     "name": "Trackname",
     "TPE1": "Artist",
     "artist": "Artist",
-    "TALB": "Album",
-    "album": "Album",
     "TDRC": "Year",
     "year": "Year",
     "date": "Year",
@@ -33,8 +30,6 @@ KEY_ALIASES = {
     "style": "Genre",
     "TXXX:energy": "energy",
     "energy": "energy",
-    "bpm": "bpm",
-    "tempo": "bpm",
     "filepath": "Filepath",
     "file_path": "Filepath",
     "path": "Filepath",
@@ -208,9 +203,18 @@ def _extract_year_range(query: str) -> Tuple[Optional[int], Optional[int]]:
 
 
 def _extract_track_count(query: str) -> Optional[int]:
-    match = re.search(r"\b(\d{1,3})\s*(tracks?|songs?)\b", query)
+    match = re.search(r"\b(\d{1,3})\s+(?:[a-z0-9&\-]+\s+){0,4}(tracks?|songs?)\b", query)
     if match:
         return int(match.group(1))
+    word_match = re.search(
+        r"\b((?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|"
+        r"thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)"
+        r"(?:\s+(?:one|two|three|four|five|six|seven|eight|nine))?)\s+"
+        r"(?:[a-z0-9&\-]+\s+){0,4}(tracks?|songs?)\b",
+        query,
+    )
+    if word_match:
+        return _word_to_int(word_match.group(1))
     return None
 
 
@@ -324,30 +328,6 @@ def _energy_bucket(value: Any) -> Optional[str]:
     return "81-100"
 
 
-def _extract_bpm_range(query: str) -> Tuple[Optional[float], Optional[float]]:
-    q = query.lower()
-    # Accept forms like '100-120 bpm', '100 to 120 bpm', 'between 100 and 120 bpm'
-    range_match = re.search(r"\b(\d{2,3})\s*(?:-|–|—|to)\s*(\d{2,3})\s*bpm\b", q)
-    if not range_match:
-        range_match = re.search(r"\bbetween\s*(\d{2,3})\s*(?:and|to|-)\s*(\d{2,3})\s*bpm\b", q)
-    if range_match:
-        a = float(range_match.group(1))
-        b = float(range_match.group(2))
-        return min(a, b), max(a, b)
-
-    min_match = re.search(r"\b(?:above|over|min(?:imum)?|at least)\s*(\d{2,3})\s*bpm\b", q)
-    max_match = re.search(r"\b(?:below|under|max(?:imum)?|at most)\s*(\d{2,3})\s*bpm\b", q)
-    if min_match or max_match:
-        return float(min_match.group(1)) if min_match else None, float(max_match.group(1)) if max_match else None
-
-    if any(word in q for word in ["slow", "downtempo"]):
-        return 60.0, 100.0
-    if any(word in q for word in ["upbeat", "fast", "dance"]):
-        return 110.0, 160.0
-
-    return None, None
-
-
 def _extract_genres(query: str) -> List[str]:
     q = query.lower()
     found = [g for g in KNOWN_GENRES if g in q]
@@ -427,8 +407,18 @@ def _dedupe_by_track_artist(records: List[Dict[str, Any]]) -> List[Dict[str, Any
 def _record_text(record: Dict[str, Any]) -> str:
     return " ".join(
         str(record.get(k, ""))
-        for k in ["Trackname", "Artist", "Album", "Genre", "Year", "Filepath"]
+        for k in ["Artist", "Genre", "Year"]
     ).lower()
+
+
+def _constraint_distance(value: Optional[float], lower: Optional[float], upper: Optional[float]) -> float:
+    if value is None:
+        return 1.0
+    if lower is not None and value < lower:
+        return lower - value
+    if upper is not None and value > upper:
+        return value - upper
+    return 0.0
 
 
 def _load_records_from_path(db_path: str) -> List[Dict[str, Any]]:
@@ -506,7 +496,6 @@ class QueryIntakeTool(BaseTool):
         genres = _extract_genres(q_lower)
         y_min, y_max = _extract_year_range(q_lower)
         e_min, e_max = _extract_energy_range(q_lower)
-        bpm_min, bpm_max = _extract_bpm_range(q_lower)
         target_count = _extract_track_count(q_lower)
         must_include, must_exclude = _parse_include_exclude(q_lower)
 
@@ -517,8 +506,6 @@ class QueryIntakeTool(BaseTool):
             objectives.append(f"Target era/year range: {y_min} to {y_max}")
         if e_min is not None or e_max is not None:
             objectives.append(f"Energy range: {e_min} to {e_max}")
-        if bpm_min is not None or bpm_max is not None:
-            objectives.append(f"Tempo BPM range: {bpm_min} to {bpm_max}")
         if target_count is not None:
             objectives.append(f"Target track count: {target_count}")
         if any(word in q_lower for word in ["morning", "night", "focus", "party", "workout", "study"]):
@@ -533,7 +520,6 @@ class QueryIntakeTool(BaseTool):
                 "genres": genres,
                 "year_range": {"min": y_min, "max": y_max},
                 "energy_range": {"min": e_min, "max": e_max},
-                "tempo_bpm_range": {"min": bpm_min, "max": bpm_max},
                 "target_track_count": target_count,
                 "must_include": must_include,
                 "must_exclude": must_exclude,
@@ -583,46 +569,22 @@ class SelectRelevantFieldsTool(BaseTool):
         source_records = [r for r in source_records if isinstance(r, dict)]
 
         intake = _safe_json_loads(query_intake_json, fallback={})
-        constraints = intake.get("constraints", {}) if isinstance(intake, dict) else {}
-
         available = set()
         if source_records:
             norm = _normalize_records(source_records[:25])
             for rec in norm:
                 available.update(rec.keys())
 
-        # Always needed for identification/output
-        selected = ["Trackname", "Artist", "Album"]
+        # Keep the agent-facing data lean: only curation metadata plus operational IDs.
+        selected = ["Trackname", "Artist", "energy", "Genre", "Year", "Filepath"]
         rationale = {
-            "Trackname": "Needed to identify each selected track.",
+            "Trackname": "Operational identifier for the selected track.",
             "Artist": "Needed for attribution and diversity control.",
-            "Album": "Useful metadata for playlist display/context.",
+            "energy": "Needed for requested energy bounds and playlist flow.",
+            "Genre": "Needed for requested genre constraints and variety.",
+            "Year": "Needed for era/year constraints and spread.",
+            "Filepath": "Operational path needed to play the selected track.",
         }
-
-        if constraints.get("genres"):
-            selected.append("Genre")
-            rationale["Genre"] = "Required to enforce requested genre constraints."
-
-        year_range = constraints.get("year_range", {})
-        if isinstance(year_range, dict) and (
-            year_range.get("min") is not None or year_range.get("max") is not None
-        ):
-            selected.append("Year")
-            rationale["Year"] = "Required to enforce year/era constraints."
-
-        energy_range = constraints.get("energy_range", {})
-        if isinstance(energy_range, dict) and (
-            energy_range.get("min") is not None or energy_range.get("max") is not None
-        ):
-            selected.append("energy")
-            rationale["energy"] = "Required to enforce requested energy bounds."
-
-        bpm_range = constraints.get("tempo_bpm_range", {})
-        if isinstance(bpm_range, dict) and (
-            bpm_range.get("min") is not None or bpm_range.get("max") is not None
-        ):
-            selected.append("bpm")
-            rationale["bpm"] = "Required to enforce tempo/BPM constraints."
 
         # If records were provided, keep only available + preserve order where possible
         if available:
@@ -631,6 +593,8 @@ class SelectRelevantFieldsTool(BaseTool):
                 selected.insert(0, "Trackname")
             if "Artist" not in selected and "Artist" in available:
                 selected.insert(1 if selected else 0, "Artist")
+            if "Filepath" not in selected and "Filepath" in available:
+                selected.append("Filepath")
 
         out = {
             "selected_fields": list(dict.fromkeys(selected)),
@@ -714,7 +678,6 @@ class FilterDatasetTool(BaseTool):
         genres = [str(g).lower() for g in constraints.get("genres", [])]
         year_range = constraints.get("year_range", {}) if isinstance(constraints.get("year_range", {}), dict) else {}
         energy_range = constraints.get("energy_range", {}) if isinstance(constraints.get("energy_range", {}), dict) else {}
-        bpm_range = constraints.get("tempo_bpm_range", {}) if isinstance(constraints.get("tempo_bpm_range", {}), dict) else {}
         must_include = [str(x).lower() for x in constraints.get("must_include", [])]
         must_exclude = [str(x).lower() for x in constraints.get("must_exclude", [])]
 
@@ -724,9 +687,6 @@ class FilterDatasetTool(BaseTool):
         e_max = _normalize_energy_value(energy_range.get("max"))
         if e_min is not None and e_max is not None and e_min > e_max:
             e_min, e_max = e_max, e_min
-        b_min = _to_float(bpm_range.get("min"))
-        b_max = _to_float(bpm_range.get("max"))
-
         norm_records = _normalize_records(records_source)
 
         def _passes(
@@ -734,7 +694,6 @@ class FilterDatasetTool(BaseTool):
             use_genre: bool = True,
             use_year: bool = True,
             use_energy: bool = True,
-            use_bpm: bool = True,
             use_include: bool = True,
             use_exclude: bool = True,
         ) -> bool:
@@ -758,12 +717,6 @@ class FilterDatasetTool(BaseTool):
             if use_energy and e_max is not None:
                 if energy_val is None or energy_val > e_max:
                     return False
-
-            bpm_val = _to_float(rec.get("bpm"))
-            if use_bpm and b_min is not None and (bpm_val is None or bpm_val < b_min):
-                return False
-            if use_bpm and b_max is not None and (bpm_val is None or bpm_val > b_max):
-                return False
 
             if use_exclude and must_exclude and any(token in text for token in must_exclude):
                 return False
@@ -796,34 +749,82 @@ class FilterDatasetTool(BaseTool):
             if filtered:
                 relaxation_note = "Relaxed include and year constraints to improve candidate coverage."
         if len(filtered) < desired_pool:
-            filtered = _collect(use_include=False, use_year=False, use_energy=False, use_bpm=False)
+            filtered = _collect(use_include=False, use_year=False, use_energy=False)
             if filtered:
-                relaxation_note = "Relaxed include, year, energy, and bpm constraints to improve candidate coverage."
+                relaxation_note = "Relaxed include, year, and energy constraints to improve candidate coverage."
         if len(filtered) < desired_pool:
             filtered = _collect(
                 use_include=False,
                 use_year=False,
                 use_energy=False,
-                use_bpm=False,
                 use_genre=False,
             )
             if filtered:
                 relaxation_note = "Returned broader next-best options with only exclusions enforced."
 
+        if len(filtered) < max(1, target_count or 1):
+            filtered = [
+                rec for rec in norm_records
+                if _passes(
+                    rec,
+                    use_genre=False,
+                    use_year=False,
+                    use_energy=False,
+                    use_include=False,
+                    use_exclude=True,
+                )
+            ]
+            relaxation_note = (
+                "Returned best-effort soft matches because exact filters produced too few candidates."
+            )
+
+        def _soft_fit_score(rec: Dict[str, Any]) -> Tuple[float, str, str]:
+            score = 0.0
+            text = _record_text(rec)
+            rec_genre = str(rec.get("Genre", "")).lower()
+
+            if genres:
+                if any(g in rec_genre for g in genres):
+                    score += 40.0
+                elif any(g in text for g in genres):
+                    score += 18.0
+
+            if must_include and _matches_include(text, must_include):
+                score += 25.0
+
+            year_val = _to_int(rec.get("Year"))
+            if y_min is not None or y_max is not None:
+                distance = _constraint_distance(float(year_val) if year_val is not None else None, y_min, y_max)
+                score += max(0.0, 20.0 - min(distance, 20.0))
+
+            energy_val = _normalize_energy_value(rec.get("energy"))
+            if e_min is not None or e_max is not None:
+                distance = _constraint_distance(
+                    float(energy_val) if energy_val is not None else None,
+                    float(e_min) if e_min is not None else None,
+                    float(e_max) if e_max is not None else None,
+                )
+                score += max(0.0, 15.0 - min(distance, 15.0))
+
+            return (-score, str(rec.get("Artist", "")).lower(), str(rec.get("Trackname", "")).lower())
+
         filtered = _dedupe_by_track_artist(filtered)
+        filtered = sorted(filtered, key=_soft_fit_score)
         pre_cap = max(50, _coerce_int(pre_sample_size) or 400)
         if len(filtered) > pre_cap:
-            filtered = random.sample(filtered, pre_cap)
+            filtered = filtered[:pre_cap]
             relaxation_note = (
-                f"{relaxation_note} Randomly pre-sampled {pre_cap} tracks from a larger valid pool."
+                f"{relaxation_note} Kept the top {pre_cap} soft matches from a larger valid pool."
                 if relaxation_note
-                else f"Randomly pre-sampled {pre_cap} tracks from a larger valid pool."
+                else f"Kept the top {pre_cap} soft matches from a larger valid pool."
             )
 
         # Keep output fields aligned with selected_fields when available
-        default_fields = ["Trackname", "Artist", "Album", "Year", "Genre", "energy", "Filepath"]
+        default_fields = ["Trackname", "Artist", "energy", "Genre", "Year", "Filepath"]
         output_fields = [f for f in selected_fields if isinstance(f, str)] or default_fields
-        for field in ["Trackname", "Artist", "Album", "Filepath"]:
+        allowed_output_fields = {"Trackname", "Artist", "energy", "Genre", "Year", "Filepath"}
+        output_fields = [f for f in output_fields if f in allowed_output_fields]
+        for field in ["Trackname", "Artist", "Filepath"]:
             if field not in output_fields:
                 output_fields.append(field)
 
@@ -835,11 +836,11 @@ class FilterDatasetTool(BaseTool):
             candidate_tracks.append(row)
         final_limit = max(10, _coerce_int(limit) or 120)
         if len(candidate_tracks) > final_limit:
-            candidate_tracks = random.sample(candidate_tracks, final_limit)
+            candidate_tracks = candidate_tracks[:final_limit]
             relaxation_note = (
-                f"{relaxation_note} Randomly sampled to final limit of {final_limit}."
+                f"{relaxation_note} Trimmed to the top {final_limit} soft matches."
                 if relaxation_note
-                else f"Randomly sampled to final limit of {final_limit}."
+                else f"Trimmed to the top {final_limit} soft matches."
             )
 
         out = {
@@ -847,7 +848,6 @@ class FilterDatasetTool(BaseTool):
                 "genres": constraints.get("genres", []),
                 "year_range": {"min": y_min, "max": y_max},
                 "energy_range": {"min": e_min, "max": e_max},
-                "tempo_bpm_range": {"min": b_min, "max": b_max},
                 "must_include": constraints.get("must_include", []),
                 "must_exclude": constraints.get("must_exclude", []),
             },
@@ -988,10 +988,37 @@ class CuratePlaylistTool(BaseTool):
         selected: List[Dict[str, Any]] = []
         used_artists = set()
 
-        # Sort by year if available (fallback stable order)
-        def sort_key(rec: Dict[str, Any]) -> Tuple[int, str]:
+        genres = [str(g).lower() for g in constraints.get("genres", [])]
+        year_range = constraints.get("year_range", {}) if isinstance(constraints.get("year_range", {}), dict) else {}
+        energy_range = constraints.get("energy_range", {}) if isinstance(constraints.get("energy_range", {}), dict) else {}
+        must_include = [str(x).lower() for x in constraints.get("must_include", [])]
+        y_min = _to_int(year_range.get("min"))
+        y_max = _to_int(year_range.get("max"))
+        e_min = _normalize_energy_value(energy_range.get("min"))
+        e_max = _normalize_energy_value(energy_range.get("max"))
+
+        # Keep relaxed candidate pools request-shaped instead of arbitrary.
+        def sort_key(rec: Dict[str, Any]) -> Tuple[float, int, str]:
+            score = 0.0
+            text = _record_text(rec)
+            rec_genre = str(rec.get("Genre", "")).lower()
+            if genres and any(g in rec_genre for g in genres):
+                score += 40.0
+            if must_include and _matches_include(text, must_include):
+                score += 25.0
             y = _to_int(rec.get("Year"))
-            return (y if y is not None else 9999, str(rec.get("Trackname", "")))
+            if y_min is not None or y_max is not None:
+                distance = _constraint_distance(float(y) if y is not None else None, y_min, y_max)
+                score += max(0.0, 20.0 - min(distance, 20.0))
+            energy_val = _normalize_energy_value(rec.get("energy"))
+            if e_min is not None or e_max is not None:
+                distance = _constraint_distance(
+                    float(energy_val) if energy_val is not None else None,
+                    float(e_min) if e_min is not None else None,
+                    float(e_max) if e_max is not None else None,
+                )
+                score += max(0.0, 15.0 - min(distance, 15.0))
+            return (-score, y if y is not None else 9999, str(rec.get("Trackname", "")))
 
         ordered = sorted(norm_candidates, key=sort_key)
 
@@ -1020,7 +1047,6 @@ class CuratePlaylistTool(BaseTool):
                     "position": idx,
                     "Trackname": rec.get("Trackname"),
                     "Artist": rec.get("Artist"),
-                    "Album": rec.get("Album"),
                     "Year": rec.get("Year"),
                     "Genre": rec.get("Genre"),
                     "energy": _normalize_energy_value(rec.get("energy")),

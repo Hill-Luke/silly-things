@@ -2,7 +2,7 @@ query_intake:
   description: >
     Review ONLY the user query {query} and restate it in clear analytical terms.
     Identify what the user is truly asking for in playlist-concept terms (mood,
-    era, genre, energy, tempo, length, time-of-day use case), including explicit
+    era, genre, energy, length, time-of-day use case), including explicit
     and obvious implicit constraints.
   expected_output: >
     Return ONLY valid JSON (no markdown, no prose) in this exact shape:
@@ -13,7 +13,6 @@ query_intake:
         "genres": ["..."] ,
         "year_range": {"min": null, "max": null},
         "energy_range": {"min": null, "max": null},
-        "tempo_bpm_range": {"min": null, "max": null},
         "target_track_count": null,
         "must_include": ["..."],
         "must_exclude": ["..."]
@@ -24,8 +23,9 @@ query_intake:
 select_relevant_fields:
   description: >
     Using the JSON from query_intake as primary context, identify only the dataset
-    columns needed to satisfy the playlist objectives and constraints. Keep the
-    list minimal and explain field usage briefly for downstream filtering.
+    columns needed to satisfy the playlist objectives and constraints. Restrict
+    curation metadata to Artist, energy, Genre, and Year. Include Trackname and
+    Filepath only as operational identifiers needed for final playlist output.
   expected_output: >
     Return ONLY valid JSON (no markdown, no prose):
     {
@@ -41,9 +41,12 @@ select_relevant_fields:
 filter_dataset:
   description: >
     Use query_intake JSON + select_relevant_fields JSON + the full dataset at {db_path}.
-    Apply the constraints to produce a filtered candidate pool. Do not curate final
-    ordering yet; this step should maximize valid candidates while respecting
-    constraints.
+    Apply the constraints to produce a filtered candidate pool. Treat target_track_count
+    and inferred mood/era/energy constraints as preferences, not hard failure
+    conditions. If exact matches are sparse, progressively relax the least essential
+    filters and return a best-effort candidate pool instead of retrying for a perfect
+    match. Do not curate final ordering yet; this step should maximize usable candidates
+    while documenting any relaxation.
   expected_output: >
     Return ONLY valid JSON (no markdown, no prose):
     {
@@ -51,7 +54,6 @@ filter_dataset:
         "genres": ["..."],
         "year_range": {"min": null, "max": null},
         "energy_range": {"min": null, "max": null},
-        "tempo_bpm_range": {"min": null, "max": null},
         "must_include": ["..."],
         "must_exclude": ["..."]
       },
@@ -60,14 +62,13 @@ filter_dataset:
         {
           "Trackname": "...",
           "Artist": "...",
-          "Album": "...",
           "Year": "...",
           "Genre": "...",
           "energy": 0,
           "Filepath": "..."
         }
       ],
-      "notes": "brief note on any relaxed/strict assumptions"
+      "notes": "brief note on any relaxed/strict assumptions; never retry solely because candidate_count is below target_track_count"
     }
   agent: data_analyst
 
@@ -93,8 +94,9 @@ analyze_relevant_data:
 curate_playlist:
   description: >
     Use all prior JSON outputs to produce the final playlist. Prioritize objective
-    fit, variety, and coherent flow. If candidate_count is below target, return the
-    best possible list and explain the shortfall clearly.
+    fit, variety, and coherent flow. The requested target_track_count is a goal rather
+    than a hard requirement. If candidate_count is below target, still return the best
+    possible playlist from available candidates and explain the shortfall clearly.
   expected_output: >
     Return ONLY valid JSON (no markdown, no prose):
     {
@@ -105,7 +107,6 @@ curate_playlist:
           "position": 1,
           "Trackname": "...",
           "Artist": "...",
-          "Album": "...",
           "Year": "...",
           "Genre": "...",
           "energy": 0,

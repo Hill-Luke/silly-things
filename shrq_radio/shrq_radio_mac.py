@@ -325,11 +325,11 @@ async def main():
 
     current_time = datetime.now().time()
     if current_time <= time(9, 0, 0):
-        playlist_prompt = "thirty songs with energy between 20 and 55, suitable for a calm morning radio show."
+        playlist_prompt = "Low to Medium energy songs"
     elif time(9, 0, 0) < current_time < time(18, 0, 0):
-        playlist_prompt = "thirty songs with a mix of energy levels from 25 to 85, suitable for a daytime radio show."
+        playlist_prompt = "Medium to High energy songs"
     else:
-        playlist_prompt = "thirty songs with energy between 30 and 65, suitable for a relaxed evening radio show."
+        playlist_prompt = "Low to Medium energy songs"
 
     playlist = build_playlist_from_crew(playlist_prompt)
     if not playlist:
