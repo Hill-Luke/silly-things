@@ -34,6 +34,7 @@ def print_tags(filepath: str) -> None:
             year = frame_text(year_frame)
 
         energy = None
+        energy_numeric = None
         for key, frame in tags.items():
             if key.startswith("TXXX:") and getattr(frame, "desc", "").lower() == "energy":
                 value = getattr(frame, "text", None)
@@ -41,14 +42,31 @@ def print_tags(filepath: str) -> None:
                     energy = str(value[0])
                 else:
                     energy = str(frame)
+                
+                # Try to parse as numeric metric (0-100)
+                try:
+                    energy_numeric = float(energy)
+                except (ValueError, TypeError):
+                    pass
                 break
+
+        # Format energy display with interpretation for numeric values
+        energy_display = energy or "N/A"
+        if energy_numeric is not None:
+            if energy_numeric < 33:
+                interpretation = "(Low energy - mellow)"
+            elif energy_numeric < 67:
+                interpretation = "(Mid energy - moderate)"
+            else:
+                interpretation = "(High energy - upbeat)"
+            energy_display = f"{energy_numeric}/100 {interpretation}"
 
         print(f"File: {filepath}")
         print(f"  Artist: {artist or 'N/A'}")
         print(f"  Genre:  {genre or 'N/A'}")
         print(f"  Album:  {album or 'N/A'}")
         print(f"  Year:   {year or 'N/A'}")
-        print(f"  Energy: {energy or 'N/A'}")
+        print(f"  Energy: {energy_display}")
     except Exception as e:
         tb = traceback.format_exc()
         print(f"Error reading tags from {filepath}: {repr(e)}\nTraceback:\n{tb}")

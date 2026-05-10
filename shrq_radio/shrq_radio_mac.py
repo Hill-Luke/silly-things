@@ -200,6 +200,28 @@ def extract_metadata(file_path):
     except:
         return {"title": "Unknown", "artist": "Unknown", "album": "Unknown"}
 
+def extract_energy_metric(file_path):
+    """Extract numeric energy metric (0-100) from ID3 tags."""
+    try:
+        from mutagen.id3 import ID3, ID3NoHeaderError, TXXX
+        try:
+            audio = ID3(file_path)
+        except ID3NoHeaderError:
+            return None
+        
+        # Look for TXXX:energy tag
+        for key in audio.keys():
+            if key.startswith("TXXX:energy"):
+                frame = audio[key]
+                try:
+                    energy_value = float(frame.text[0])
+                    return energy_value
+                except (ValueError, IndexError):
+                    return None
+        return None
+    except:
+        return None
+
 # ------------------------
 # Main function
 # ------------------------
@@ -255,8 +277,18 @@ async def main():
             continue
         else:
             md = extract_metadata(track)
+            energy = extract_energy_metric(track)
+            energy_desc = ""
+            if energy is not None:
+                if energy < 33:
+                    energy_desc = "This is a low-energy, mellow track. "
+                elif energy < 67:
+                    energy_desc = "This is a mid-tempo, moderate-energy track. "
+                else:
+                    energy_desc = "This is a high-energy, upbeat track. "
+            
             prompt = (
-                f"You are an experienced radio scriptwriter creating a short on-air segment for a music program on the radio station S-H-R-Q. Your tone should be — warm, playful, but not overly silly. Write a brief spoken script for a single host named Jessica who introduces and briefly comments on the song {md['title']} by {md['artist']}, keeping the tone natural and intelligent. Keep the script to one or two sentences. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next: here is {md['title']} by {md['artist']} from the album {md['album']}. You're listening to S-H-R-Q Radio.'"
+                f"You are an experienced radio scriptwriter creating a short on-air segment for a music program on the radio station S-H-R-Q. Your tone should be — warm, playful, but not overly silly. Write a brief spoken script for a single host named Jessica who introduces and briefly comments on the song {md['title']} by {md['artist']}, keeping the tone natural and intelligent. {energy_desc}Keep the script to one or two sentences. Do not include or describe any sound effects, music, or production cues. Output only the host\'s spoken words — no explanations, labels, or introductions. End with: 'Up next: here is {md['title']} by {md['artist']} from the album {md['album']}. You're listening to S-H-R-Q Radio.'"
             )
 
         result = client.chat(model='llama3.2:1b', messages=[{"role": "user", "content": prompt}])

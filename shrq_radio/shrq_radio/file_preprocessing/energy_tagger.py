@@ -7,25 +7,37 @@ import soundfile as sf
 from mutagen.id3 import ID3, ID3NoHeaderError, TXXX
 
 
-def classify_tempo(bpm: float) -> str:
-    if bpm < 90:
-        return "low"
-    if bpm < 120:
-        return "medium"
-    return "high"
+def _linear_score(value: float, floor: float, ceiling: float) -> float:
+    """Map a value between two calibration points onto a 0-100 score."""
+    if ceiling <= floor:
+        return 0.0
+    return max(0.0, min(100.0, (value - floor) / (ceiling - floor) * 100.0))
 
 
-def classify_waveform(rms: np.ndarray, lufs: float) -> str:
-    """Classify overall waveform energy using RMS + LUFS."""
-    loudness_score = max(0.0, 100.0 + float(lufs))
-    rms_score = float(np.mean(rms)) * 1000.0
-    avg_energy = (loudness_score + rms_score) / 2.0
+def get_tempo_energy_score(bpm: float) -> float:
+    """
+    Convert BPM to a numeric energy score (0-100).
+    Lower BPM (< 85) = lower energy, faster tracks ramp up gradually.
+    """
+    if bpm <= 0:
+        return 0.0
+    return _linear_score(float(bpm), 70.0, 175.0)
 
-    if avg_energy < 60:
-        return "low"
-    if avg_energy < 80:
-        return "medium"
-    return "high"
+
+def get_waveform_energy_score(rms: np.ndarray, lufs: float) -> float:
+    """
+    Compute a numeric waveform energy score (0-100) using RMS + LUFS.
+    Calibrated so normally mastered songs do not all max out at 100.
+    """
+    rms_avg = float(np.mean(rms))
+
+    # Typical music tends to land around -24 to -8 LUFS and 0.03 to 0.30 RMS
+    # after loading into normalized floating point audio. The old RMS * 1000
+    # scaling made most full-range songs saturate at 100.
+    loudness_score = _linear_score(float(lufs), -32.0, -7.0)
+    rms_score = _linear_score(rms_avg, 0.03, 0.32)
+
+    return (loudness_score * 0.6) + (rms_score * 0.4)
 
 
 def add_energy_tag(mp3_path: str, energy_value: str) -> None:
@@ -154,7 +166,7 @@ def analyze_mp3(filepath: str) -> None:
     y = _to_mono_float32(y)
 
     tempo_value = _estimate_tempo(y, sr)
-    tempo_class = classify_tempo(tempo_value)
+    tempo_energy = get_tempo_energy_score(tempo_value)
 
     rms = _frame_rms(y)
     meter = pyln.Meter(sr)
@@ -164,16 +176,18 @@ def analyze_mp3(filepath: str) -> None:
     except Exception:
         lufs = -70.0
 
-    waveform_class = classify_waveform(rms, lufs)
+    waveform_energy = get_waveform_energy_score(rms, lufs)
 
-    energy_tag = f"{tempo_class}_{waveform_class}"
-    print(f"🎚 Tempo: {tempo_value:.2f} BPM ({tempo_class})")
+    # Combine tempo and waveform energy into single numeric score
+    overall_energy = (tempo_energy + waveform_energy) / 2.0
+
+    print(f"🎚 Tempo: {tempo_value:.2f} BPM (energy score: {tempo_energy:.1f})")
     print(
-        f"🔊 LUFS: {lufs:.2f}, RMS avg: {float(np.mean(rms)):.4f} ({waveform_class})"
+        f"🔊 LUFS: {lufs:.2f}, RMS avg: {float(np.mean(rms)):.4f} (energy score: {waveform_energy:.1f})"
     )
-    print(f"⚡ Combined energy classification: {energy_tag}")
+    print(f"⚡ Overall energy metric: {overall_energy:.1f}/100")
 
-    add_energy_tag(filepath, energy_tag)
+    add_energy_tag(filepath, str(round(overall_energy, 1)))
 
 
 if __name__ == "__main__":
