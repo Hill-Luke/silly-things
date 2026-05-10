@@ -14,7 +14,7 @@ venv/
 *.flac
 *.csv
 filepaths.txt
-
+*.json
 *.log
 *.onnx
 timestamp.log
